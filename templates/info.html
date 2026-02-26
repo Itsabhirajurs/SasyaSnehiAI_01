@@ -24,13 +24,13 @@
 
     <!-- HERO -->
     <section class="about-hero">
-      <h1>🌱 About Sashyasnehi AI</h1>
+      <h1>About Sashyasnehi AI</h1>
       <p>An intelligent, open-source crop advisory system for Indian farmers — built with transfer learning, real-time weather data and multilingual AI.</p>
     </section>
 
     <!-- OVERVIEW -->
     <div class="card">
-      <h2>🎯 Project Overview</h2>
+      <h2>Project Overview</h2>
       <p style="line-height:1.8;color:var(--muted);">
         Sashyasnehi AI (meaning <em>"Friend of Crops"</em> in Odia) is a modular web-based advisory system that combines deep learning plant disease classification with contextual environmental risk, chemical safety analysis, and multilingual AI guidance. The goal is to put expert-level crop health analysis into the hands of every farmer — for free, in their language, with no technical knowledge required.
       </p>
@@ -38,7 +38,7 @@
 
     <!-- TECH STACK -->
     <div class="card">
-      <h2>🛠 Technology Stack</h2>
+      <h2>Technology Stack</h2>
       <div class="tech-stack">
         <span class="tech-chip">Python 3.12</span>
         <span class="tech-chip">Flask 3.1</span>
@@ -57,64 +57,64 @@
 
     <!-- AI MODEL -->
     <div class="card">
-      <h2>🧠 AI Model Architecture</h2>
+      <h2>AI Model Architecture</h2>
       <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;">
         The disease classifier uses <strong>MobileNetV2</strong> as a frozen feature extractor (pretrained on ImageNet), with a custom classification head:
       </p>
       <ul class="module-list">
-        <li><span class="m-icon">⬛</span><span><strong>Input</strong>: 224×224 RGB leaf image, preprocessed with MobileNetV2 normalisation</span></li>
-        <li><span class="m-icon">🔷</span><span><strong>Base</strong>: MobileNetV2 frozen (87 layers, 2.2M params) — ImageNet weights</span></li>
-        <li><span class="m-icon">🔸</span><span><strong>Head</strong>: GlobalAveragePooling2D → Dropout(0.3) → Dense(128, ReLU) → Softmax(N)</span></li>
-        <li><span class="m-icon">⚙️</span><span><strong>Training</strong>: Adam (lr=1e-4), categorical crossentropy, EarlyStopping + ReduceLROnPlateau</span></li>
-        <li><span class="m-icon">🎯</span><span><strong>Classes</strong>: Tomato Early/Late Blight, Potato Early/Late Blight, Pepper Bacterial Spot, Tomato Healthy</span></li>
+        <li><span class="m-icon m-num">IN</span><span><strong>Input</strong>: 224x224 RGB leaf image, preprocessed with MobileNetV2 normalisation</span></li>
+        <li><span class="m-icon m-num">BK</span><span><strong>Base</strong>: MobileNetV2 frozen (87 layers, 2.2M params) — ImageNet weights</span></li>
+        <li><span class="m-icon m-num">HD</span><span><strong>Head</strong>: GlobalAveragePooling2D &rarr; Dropout(0.3) &rarr; Dense(128, ReLU) &rarr; Softmax(N)</span></li>
+        <li><span class="m-icon m-num">TR</span><span><strong>Training</strong>: Adam (lr=1e-4), categorical crossentropy, EarlyStopping + ReduceLROnPlateau</span></li>
+        <li><span class="m-icon m-num">CL</span><span><strong>Classes</strong>: Tomato Early/Late Blight, Potato Early/Late Blight, Pepper Bacterial Spot, Tomato Healthy</span></li>
       </ul>
     </div>
 
     <!-- MODULES -->
     <div class="card">
-      <h2>📦 System Modules</h2>
+      <h2>System Modules</h2>
       <ul class="module-list">
-        <li><span class="m-icon">🔬</span><span><strong>model_loader.py</strong> — Singleton TF model service, loads once, serves predictions</span></li>
-        <li><span class="m-icon">📊</span><span><strong>severity.py</strong> — HSV colour masking: yellow + brown + dark ranges → infected pixel percentage</span></li>
-        <li><span class="m-icon">🌦</span><span><strong>weather.py</strong> — OpenWeather free-tier API: humidity, temperature, rain probability risk formula</span></li>
-        <li><span class="m-icon">⚗️</span><span><strong>chemical_safety.py</strong> — JSON knowledge base lookup: bee toxicity, soil microbe impact, human health risk</span></li>
-        <li><span class="m-icon">📋</span><span><strong>advisory.py</strong> — Rule-based engine: severity × risk × soil type → actionable treatment plan</span></li>
-        <li><span class="m-icon">🤖</span><span><strong>llm_service.py</strong> — Google Gemini with auto-failover across 34 available models; offline fallback mode</span></li>
-        <li><span class="m-icon">🗺️</span><span><strong>app.py</strong> — Flask orchestration layer: routes, image save, module pipeline, JSON chat endpoint</span></li>
+        <li><span class="m-icon m-num">01</span><span><strong>model_loader.py</strong> — Singleton TF model service, loads once, serves predictions</span></li>
+        <li><span class="m-icon m-num">02</span><span><strong>severity.py</strong> — HSV colour masking: yellow + brown + dark ranges &rarr; infected pixel percentage</span></li>
+        <li><span class="m-icon m-num">03</span><span><strong>weather.py</strong> — OpenWeather free-tier API: humidity, temperature, rain probability risk formula</span></li>
+        <li><span class="m-icon m-num">04</span><span><strong>chemical_safety.py</strong> — JSON knowledge base lookup: bee toxicity, soil microbe impact, human health risk</span></li>
+        <li><span class="m-icon m-num">05</span><span><strong>advisory.py</strong> — Rule-based engine: severity x risk x soil type &rarr; actionable treatment plan</span></li>
+        <li><span class="m-icon m-num">06</span><span><strong>llm_service.py</strong> — Google Gemini with auto-failover across 34 available models; offline fallback mode</span></li>
+        <li><span class="m-icon m-num">07</span><span><strong>app.py</strong> — Flask orchestration layer: routes, image save, module pipeline, JSON chat endpoint</span></li>
       </ul>
     </div>
 
     <!-- DISEASE CLASSES -->
     <div class="card">
-      <h2>🌿 Supported Crop Diseases</h2>
+      <h2>Supported Crop Diseases</h2>
       <div class="features-grid" style="margin-bottom:0;">
         <div class="feature-card">
-          <span class="feature-icon">🍅</span>
+          <span class="feature-icon">T-EB</span>
           <h3>Tomato Early Blight</h3>
           <p><em>Alternaria solani</em> — dark concentric rings on lower leaves.</p>
         </div>
         <div class="feature-card">
-          <span class="feature-icon">🍅</span>
+          <span class="feature-icon">T-LB</span>
           <h3>Tomato Late Blight</h3>
           <p><em>Phytophthora infestans</em> — water-soaked lesions, white mould.</p>
         </div>
         <div class="feature-card">
-          <span class="feature-icon">🥔</span>
+          <span class="feature-icon">P-EB</span>
           <h3>Potato Early Blight</h3>
           <p><em>Alternaria solani</em> — brown target-board spots on foliage.</p>
         </div>
         <div class="feature-card">
-          <span class="feature-icon">🥔</span>
+          <span class="feature-icon">P-LB</span>
           <h3>Potato Late Blight</h3>
           <p><em>Phytophthora infestans</em> — dark patches, rapid defoliation.</p>
         </div>
         <div class="feature-card">
-          <span class="feature-icon">🫑</span>
+          <span class="feature-icon">C-BS</span>
           <h3>Pepper Bacterial Spot</h3>
           <p><em>Xanthomonas euvesicatoria</em> — water-soaked leaf spots.</p>
         </div>
         <div class="feature-card">
-          <span class="feature-icon">✅</span>
+          <span class="feature-icon">OK</span>
           <h3>Tomato Healthy</h3>
           <p>No disease detected — confirms a disease-free leaf image.</p>
         </div>
@@ -123,7 +123,7 @@
 
     <!-- DATA & PRIVACY -->
     <div class="card">
-      <h2>🔒 Data &amp; Privacy</h2>
+      <h2>Data &amp; Privacy</h2>
       <p style="color:var(--muted);line-height:1.8;">
         Uploaded images are stored locally in <code>static/uploads/</code> and are not transmitted to any external server. Location data (if provided) is used only for a single OpenWeather API call during the analysis request and is not stored. API keys are kept in a local <code>.env</code> file and never exposed in the browser.
       </p>
@@ -131,15 +131,15 @@
 
     <!-- CTA -->
     <div style="text-align:center;margin-top:12px;">
-      <a class="btn" href="{{ url_for('upload') }}" style="font-size:1rem;padding:12px 32px;">📸 Try It Now</a>
+      <a class="btn" href="{{ url_for('upload') }}" style="font-size:1rem;padding:12px 32px;">Try It Now</a>
       &nbsp;&nbsp;
-      <a class="btn-secondary" href="{{ url_for('home') }}" style="font-size:0.95rem;padding:11px 22px;">← Back to Home</a>
+      <a class="btn-secondary" href="{{ url_for('home') }}" style="font-size:0.95rem;padding:11px 22px;">&larr; Back to Home</a>
     </div>
 
   </div><!-- /page-wrap -->
 
   <footer class="footer">
-    Sashyasnehi AI &copy; 2025 &nbsp;·&nbsp; Built with ❤️ for Indian Farmers &nbsp;·&nbsp;
+    Sashyasnehi AI &copy; 2025 &nbsp;&middot;&nbsp; Built with Flask, TensorFlow &amp; Gemini &nbsp;&middot;&nbsp;
     <a href="{{ url_for('home') }}">Home</a>
   </footer>
 

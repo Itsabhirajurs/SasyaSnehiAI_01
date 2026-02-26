@@ -23,7 +23,7 @@
   <div class="page-wrap">
 
     <div class="page-header">
-      <h2>📸 Analyze Your Crop</h2>
+      <h2>Analyze Your Crop</h2>
       <p>Upload a leaf image and fill in your farm details for a complete AI advisory.</p>
     </div>
 
@@ -31,10 +31,10 @@
 
       <!-- IMAGE SECTION -->
       <div class="form-section">
-        <div class="form-section-title">🌿 Crop Image *</div>
+        <div class="form-section-title">Crop Image *</div>
         <div class="drop-zone" id="drop-zone">
           <input type="file" name="image" accept="image/*" id="img-input" required>
-          <span class="drop-icon">📷</span>
+          <span class="drop-icon">+</span>
           <p><strong>Click to browse</strong> or drag &amp; drop your leaf image here</p>
           <p style="font-size:0.78rem;margin-top:4px;opacity:0.7;">JPG, PNG, WEBP — max 10 MB</p>
         </div>
@@ -45,7 +45,7 @@
 
       <!-- FARM CONTEXT -->
       <div class="form-section">
-        <div class="form-section-title">🌾 Farm Details</div>
+        <div class="form-section-title">Farm Details</div>
         <div class="form-row">
           <div class="form-group">
             <label>Soil Type</label>
@@ -78,7 +78,7 @@
 
       <!-- CHEMICALS -->
       <div class="form-section">
-        <div class="form-section-title">⚗️ Previously Used Chemicals</div>
+        <div class="form-section-title">Previously Used Chemicals</div>
         <div class="form-group">
           <label>Chemical Names <span style="opacity:0.5">(comma-separated, optional)</span></label>
           <textarea name="chemicals" rows="2" placeholder="e.g., chlorpyrifos, imidacloprid, glyphosate"></textarea>
@@ -91,11 +91,11 @@
 
       <!-- LOCATION -->
       <div class="form-section">
-        <div class="form-section-title">📍 Location (for weather risk)</div>
+        <div class="form-section-title">Location (for weather risk)</div>
         <input type="hidden" name="latitude" id="latitude">
         <input type="hidden" name="longitude" id="longitude">
         <div class="location-row">
-          <button type="button" class="btn-secondary" onclick="captureLocation()">📍 Use My Location</button>
+          <button type="button" class="btn-secondary" onclick="captureLocation()">Use My Location</button>
           <span id="location-status">Location not captured — weather risk will use defaults.</span>
         </div>
       </div>
@@ -103,7 +103,7 @@
       <!-- SUBMIT -->
       <div class="form-actions">
         <a href="{{ url_for('home') }}" class="btn-secondary">← Back</a>
-        <button type="submit" class="btn">🔍 Run Analysis</button>
+        <button type="submit" class="btn">Run Analysis</button>
       </div>
 
     </form>
@@ -154,7 +154,7 @@
         (pos) => {
           document.getElementById('latitude').value = pos.coords.latitude;
           document.getElementById('longitude').value = pos.coords.longitude;
-          status.textContent = `✅ Location captured (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`;
+          status.textContent = `Location captured (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`;  
         },
         () => { status.textContent = 'Unable to get location. Continuing without it.'; }
       );

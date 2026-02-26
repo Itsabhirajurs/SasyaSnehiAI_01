@@ -23,21 +23,21 @@
   <div class="page-wrap">
 
     <div class="page-header">
-      <h2>📋 Analysis Report</h2>
+      <h2>Analysis Report</h2>
       <p>Full AI advisory based on your uploaded image and farm details.</p>
     </div>
 
     <!-- NOTICES -->
     {% if prediction_error %}
-      <p class="warn" style="margin-bottom:12px;">⚠️ {{ prediction_error }}</p>
+      <p class="warn" style="margin-bottom:12px;">Warning: {{ prediction_error }}</p>
     {% endif %}
     {% if not llm_available %}
-      <p class="info" style="margin-bottom:12px;">ℹ️ Gemini AI is not configured. Advisory shown in rule-based mode. Add <code>GEMINI_API_KEY</code> in .env for multilingual AI chat.</p>
+      <p class="info" style="margin-bottom:12px;">Gemini AI is not configured. Advisory shown in rule-based mode. Add <code>GEMINI_API_KEY</code> in .env for multilingual AI chat.</p>
     {% endif %}
 
     <!-- DETECTION CARD -->
     <div class="card">
-      <h2>🔍 Disease Detection</h2>
+      <h2>Disease Detection</h2>
       <img src="{{ image_url }}" alt="Uploaded plant image" class="preview-img">
 
       <div class="result-grid">
@@ -70,7 +70,7 @@
 
     <!-- ENVIRONMENTAL RISK -->
     <div class="card">
-      <h2>🌦 Environmental Risk</h2>
+      <h2>Environmental Risk</h2>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
         <span style="font-size:1.05rem;font-weight:600;">Risk Level:</span>
         <span class="risk-badge risk-{{ weather.risk_level | lower }}">{{ weather.risk_level }}</span>
@@ -79,17 +79,14 @@
       {% if weather.humidity is not none or weather.temperature is not none %}
         <div class="weather-grid">
           <div class="weather-cell">
-            <span class="w-icon">💧</span>
             <div class="w-val">{{ weather.humidity if weather.humidity is not none else '—' }}%</div>
             <div class="w-lbl">Humidity</div>
           </div>
           <div class="weather-cell">
-            <span class="w-icon">🌡️</span>
             <div class="w-val">{{ weather.temperature if weather.temperature is not none else '—' }}°C</div>
             <div class="w-lbl">Temperature</div>
           </div>
           <div class="weather-cell">
-            <span class="w-icon">🌧️</span>
             <div class="w-val">{{ weather.rain_probability if weather.rain_probability is not none else '—' }}%</div>
             <div class="w-lbl">Rain Probability</div>
           </div>
@@ -101,26 +98,26 @@
 
     <!-- ADVISORY -->
     <div class="card">
-      <h2>📋 Crop Advisory</h2>
+      <h2>Crop Advisory</h2>
 
       <div class="advisory-section">
-        <h3>💡 Summary</h3>
+        <h3>Summary</h3>
         <p>{{ advisory.summary }}</p>
       </div>
 
       <div class="advisory-section">
-        <h3>🔎 Possible Causes</h3>
+        <h3>Possible Causes</h3>
         <p>{{ advisory.causes }}</p>
       </div>
 
       <div class="advisory-section">
-        <h3>✅ Recommended Actions</h3>
+        <h3>Recommended Actions</h3>
         <p>{{ advisory.actions }}</p>
       </div>
 
       {% if advisory.chemicals_to_avoid %}
         <div class="advisory-section">
-          <h3>🚫 Chemicals to Avoid</h3>
+          <h3>Chemicals to Avoid</h3>
           <ul>
             {% for c in advisory.chemicals_to_avoid %}
               <li>{{ c }}</li>
@@ -131,7 +128,7 @@
 
       {% if advisory.alternatives %}
         <div class="advisory-section">
-          <h3>🌿 Safer Alternatives</h3>
+          <h3>Safer Alternatives</h3>
           <ul>
             {% for alt in advisory.alternatives %}
               <li>{{ alt }}</li>
@@ -144,11 +141,11 @@
     <!-- CHEMICAL SAFETY -->
     {% if chemical_analysis.findings %}
       <div class="card">
-        <h2>⚗️ Chemical Safety Analysis</h2>
+        <h2>Chemical Safety Analysis</h2>
         <ul class="module-list">
           {% for finding in chemical_analysis.findings %}
             <li>
-              <span class="m-icon">⚠️</span>
+              <span class="m-icon chem-warn">!</span>
               <span><strong>{{ finding.chemical }}</strong>: {{ finding.message }}</span>
             </li>
           {% endfor %}
@@ -159,88 +156,82 @@
     <!-- NEARBY HELP (severe) -->
     {% if nursery_link %}
       <div class="card" style="border-left:4px solid var(--warn);">
-        <h2>🗺️ Severe Case — Find Nearby Help</h2>
+        <h2>Severe Case — Find Nearby Help</h2>
         <p style="color:var(--muted);margin-bottom:16px;">Severity is high. Consider consulting an agricultural expert near you.</p>
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          <a href="{{ nursery_link }}" target="_blank" class="btn btn-sm">🌱 Nearby Nursery</a>
-          <a href="{{ consultant_link }}" target="_blank" class="btn-outline btn btn-sm">👨‍🌾 Agriculture Consultant</a>
+          <a href="{{ nursery_link }}" target="_blank" class="btn btn-sm">Nearby Nursery</a>
+          <a href="{{ consultant_link }}" target="_blank" class="btn-outline btn btn-sm">Agriculture Consultant</a>
         </div>
       </div>
     {% endif %}
 
     <!-- AI CHAT -->
     <div class="card">
-      <h2>💬 Ask AI About Your Crop</h2>
+      <h2>Ask AI About Your Crop</h2>
       <p style="color:var(--muted);margin-bottom:16px;font-size:0.9rem;">
         Have a full conversation with Gemini AI about your crop in <strong>{{ language }}</strong>. Ask follow-up questions — it remembers the whole chat.
       </p>
-      <div class="chat-container">
-        <div class="chat-thread" id="chatThread"></div>
-        <div class="chat-input-row">
-          <textarea id="chatInput" placeholder="Ask anything… e.g. How often should I spray? Any organic alternatives?" rows="1"></textarea>
-          <button class="chat-send-btn" id="chatSendBtn" title="Send (Ctrl+Enter)">➤</button>
-        </div>
+
+      <div class="chat-thread" id="chatThread"></div>
+
+      <div class="chat-input-row">
+        <textarea id="chatInput" placeholder="Ask anything... e.g. How often should I spray? Any organic alternatives?"></textarea>
+        <button class="chat-send-btn" id="chatSendBtn" type="button" title="Send (Ctrl+Enter)">Send</button>
       </div>
     </div>
 
     <!-- FOOTER ACTIONS -->
     <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;">
-      <a class="btn-secondary" href="{{ url_for('upload') }}">← New Analysis</a>
-      <a class="btn" href="{{ url_for('home') }}">🏠 Home</a>
+      <a class="btn-secondary" href="{{ url_for('upload') }}">&larr; New Analysis</a>
+      <a class="btn" href="{{ url_for('home') }}">Home</a>
     </div>
 
   </div><!-- /page-wrap -->
 
   <footer class="footer">
-    Sashyasnehi AI &copy; 2025 &nbsp;·&nbsp; <a href="{{ url_for('about') }}">About</a>
+    Sashyasnehi AI &copy; 2025 &nbsp;&middot;&nbsp; <a href="{{ url_for('about') }}">About</a>
   </footer>
 
   <script>
     const advisoryContext = {{ advisory_context|tojson }};
     const language = {{ language|tojson }};
 
-    // ── Conversation state ──────────────────────────────────────────────────
-    let conversationHistory = [];   // [{role:"user"|"ai", content:"..."}]
+    let conversationHistory = [];
 
-    const thread   = document.getElementById('chatThread');
-    const input    = document.getElementById('chatInput');
-    const sendBtn  = document.getElementById('chatSendBtn');
+    const thread  = document.getElementById('chatThread');
+    const input   = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('chatSendBtn');
 
-    // ── Markdown-lite renderer (bold + bullets) ─────────────────────────────
     function renderMarkdown(text) {
       return text
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.+?)\*/g, '<em>$1</em>')
         .replace(/^[-*•]\s+(.+)$/gm, '<li>$1</li>')
-        .replace(/(<li>.*<\/li>(\n|$))+/g, m => `<ul>${m}</ul>`)
+        .replace(/(<li>[\s\S]*?<\/li>\n?)+/g, m => '<ul>' + m + '</ul>')
         .replace(/\n/g, '<br>');
     }
 
-    // ── Add a message bubble to the thread ─────────────────────────────────
     function appendBubble(role, htmlContent) {
-      const isUser = role === 'user';
       const row = document.createElement('div');
-      row.className = `chat-msg ${role}`;
-      row.innerHTML = `
-        <div class="chat-avatar">${isUser ? '🧑‍🌾' : '🤖'}</div>
-        <div class="chat-bubble">${htmlContent}</div>`;
+      row.className = 'chat-msg ' + role;
+      const avatar = document.createElement('div');
+      avatar.className = 'chat-avatar';
+      avatar.textContent = role === 'user' ? 'You' : 'AI';
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble';
+      bubble.innerHTML = htmlContent;
+      row.appendChild(avatar);
+      row.appendChild(bubble);
       thread.appendChild(row);
       thread.scrollTop = thread.scrollHeight;
-      return row;
     }
 
-    // ── Typing indicator ────────────────────────────────────────────────────
     function showTyping() {
       const row = document.createElement('div');
       row.className = 'chat-msg ai';
       row.id = 'typingRow';
-      row.innerHTML = `
-        <div class="chat-avatar">🤖</div>
-        <div class="chat-bubble typing-bubble">
-          <span class="typing-dot"></span>
-          <span class="typing-dot"></span>
-          <span class="typing-dot"></span>
-        </div>`;
+      row.innerHTML = '<div class="chat-avatar">AI</div><div class="chat-bubble typing-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>';
       thread.appendChild(row);
       thread.scrollTop = thread.scrollHeight;
     }
@@ -250,7 +241,6 @@
       if (el) el.remove();
     }
 
-    // ── Send message ────────────────────────────────────────────────────────
     async function sendChat() {
       const question = input.value.trim();
       if (!question) return;
@@ -259,10 +249,8 @@
       input.style.height = 'auto';
       sendBtn.disabled = true;
 
-      // Show user bubble immediately
       appendBubble('user', renderMarkdown(question));
       conversationHistory.push({ role: 'user', content: question });
-
       showTyping();
 
       try {
@@ -270,10 +258,10 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            question,
+            question: question,
             context: advisoryContext,
-            language,
-            history: conversationHistory.slice(0, -1)   // all except the current user msg
+            language: language,
+            history: conversationHistory.slice(0, -1)
           })
         });
         const data = await response.json();
@@ -283,7 +271,7 @@
         appendBubble('ai', renderMarkdown(answer));
       } catch (err) {
         hideTyping();
-        const errMsg = '❌ Unable to reach AI service. Please check your connection.';
+        const errMsg = 'Unable to reach AI service. Please check your connection.';
         appendBubble('ai', errMsg);
         conversationHistory.push({ role: 'ai', content: errMsg });
       }
@@ -292,21 +280,21 @@
       input.focus();
     }
 
-    // ── Auto-grow textarea ──────────────────────────────────────────────────
-    input.addEventListener('input', () => {
-      input.style.height = 'auto';
-      input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+    input.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
     });
 
-    // ── Ctrl+Enter or Enter (without Shift) to send ─────────────────────────
-    input.addEventListener('keydown', e => {
-      if ((e.key === 'Enter' && e.ctrlKey) || (e.key === 'Enter' && !e.shiftKey && !e.metaKey)) {
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         if (!sendBtn.disabled) sendChat();
       }
     });
 
-    sendBtn.addEventListener('click', () => { if (!sendBtn.disabled) sendChat(); });
+    sendBtn.addEventListener('click', function() {
+      if (!sendBtn.disabled) sendChat();
+    });
   </script>
 </body>
 </html>
