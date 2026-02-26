@@ -12,14 +12,18 @@ YELLOW_UPPER = np.array([35, 255, 255])
 BROWN_LOWER = np.array([5, 50, 20])
 BROWN_UPPER = np.array([20, 255, 200])
 
+# Narrowed dark mask: only catch near-black pixels (V<40) that represent
+# necrotic/dead tissue, NOT general shadows or dark backgrounds.
 DARK_LOWER = np.array([0, 0, 0])
-DARK_UPPER = np.array([180, 255, 60])
+DARK_UPPER = np.array([180, 80, 40])
 
 
 def _category(percentage: float) -> str:
-    if percentage <= 10:
+    if percentage <= 5:
+        return "None"
+    if percentage <= 15:
         return "Mild"
-    if percentage <= 30:
+    if percentage <= 35:
         return "Moderate"
     return "Severe"
 

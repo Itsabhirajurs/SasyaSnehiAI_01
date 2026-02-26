@@ -62,7 +62,11 @@
             <span class="severity-badge severity-{{ severity.category | lower }}">
               {{ severity.category }}
             </span>
-            &nbsp; {{ severity.percentage }}% infected area
+            {% if severity.category | lower != 'none' %}
+              &nbsp; {{ severity.percentage }}% infected area
+            {% else %}
+              &nbsp; No infection detected
+            {% endif %}
           </div>
         </div>
       </div>

@@ -121,6 +121,7 @@ a:hover{text-decoration:underline;}
 .conf-bar-wrap{margin-top:6px;height:7px;background:#e0eadd;border-radius:10px;overflow:hidden;}
 .conf-bar{height:100%;background:linear-gradient(90deg,var(--accent),#55c97a);border-radius:10px;transition:width 0.6s ease;}
 .severity-badge{display:inline-block;padding:3px 12px;border-radius:40px;font-size:0.8rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;}
+.severity-none{background:#e8f5e9;color:#2e7d32;}
 .severity-mild{background:#d4f7d4;color:#1a6b1a;}
 .severity-moderate{background:#fff4c2;color:#856a00;}
 .severity-severe{background:#ffe0dc;color:#b82c1b;}

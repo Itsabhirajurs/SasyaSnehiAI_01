@@ -105,8 +105,16 @@ def analyze():
 
     plant_name, disease_name = _parse_label(str(prediction["label"]))
     confidence = float(prediction["confidence"])
+    is_healthy = disease_name.strip().lower() in ("healthy", "none", "normal", "no disease")
 
-    severity = estimate_severity(str(save_path))
+    # If plant is healthy, severity is meaningless — override to zero
+    if is_healthy:
+        severity = {"percentage": 0.0, "category": "None"}
+    else:
+        severity = estimate_severity(str(save_path))
+
+    # Disease confidence drives the risk score — 0 for healthy predictions
+    disease_confidence = 0.0 if is_healthy else confidence
 
     try:
         weather = get_environment_risk(
@@ -114,12 +122,14 @@ def analyze():
             app.config["OPENWEATHER_BASE_URL"],
             latitude,
             longitude,
-            confidence,
+            disease_confidence,
         )
     except Exception:
+        base_score = round(min(disease_confidence * 0.55, 1.0), 3)
+        _rl = "High" if base_score >= 0.7 else ("Moderate" if base_score >= 0.4 else "Low")
         weather = {
-            "risk_score": round(confidence, 3),
-            "risk_level": "Moderate" if confidence >= 0.4 else "Low",
+            "risk_score": base_score,
+            "risk_level": _rl,
             "humidity": None,
             "temperature": None,
             "rain_probability": None,
@@ -130,6 +140,7 @@ def analyze():
 
     advisory = generate_advisory(
         disease=disease_name,
+        plant=plant_name,
         confidence=confidence,
         severity=str(severity["category"]),
         risk_level=str(weather["risk_level"]),

@@ -13,17 +13,33 @@ def _to_risk_level(score: float) -> str:
     return "High"
 
 
-def _calculate_score(base_confidence: float, humidity: float, rain_probability: float, temperature: float) -> float:
-    score = max(0.0, min(1.0, float(base_confidence)))
+def _calculate_score(disease_confidence: float, humidity: float, rain_probability: float, temperature: float) -> float:
+    """Score 0-1 where disease_confidence=0 means healthy/unknown.
 
-    if humidity > 75:
-        score += 0.15
+    Components:
+      - Disease confidence weight  (0 – 0.55)
+      - Humidity factor             (0 – 0.20)
+      - Rain probability factor     (0 – 0.15)
+      - Temperature factor          (0 – 0.10)
+    """
+    disease_factor = max(0.0, min(1.0, float(disease_confidence))) * 0.55
+
+    humidity_factor = 0.0
+    if humidity > 80:
+        humidity_factor = 0.20
+    elif humidity > 60:
+        humidity_factor = 0.10
+
+    rain_factor = 0.0
     if rain_probability > 60:
-        score += 0.10
-    if 18 <= temperature <= 28:
-        score += 0.10
+        rain_factor = 0.15
+    elif rain_probability > 30:
+        rain_factor = 0.07
 
-    return min(score, 1.0)
+    # Temperatures in the 18-27°C sweet spot favour fungal/bacterial growth
+    temp_factor = 0.10 if 18 <= temperature <= 27 else 0.0
+
+    return min(disease_factor + humidity_factor + rain_factor + temp_factor, 1.0)
 
 
 def get_environment_risk(
@@ -34,7 +50,7 @@ def get_environment_risk(
     base_confidence: float,
 ) -> Dict[str, float | str]:
     if not api_key or latitude is None or longitude is None:
-        score = max(0.0, min(1.0, float(base_confidence)))
+        score = _calculate_score(base_confidence, 0.0, 0.0, 20.0)
         return {
             "risk_score": round(score, 3),
             "risk_level": _to_risk_level(score),
