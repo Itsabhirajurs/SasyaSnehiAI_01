@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import uuid
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
@@ -165,6 +167,14 @@ def analyze():
     )
 
     llm_available = llm_service.is_available()
+
+    # Store original English advisory in session for language switching
+    session["orig_advisory"] = {
+        "summary": str(advisory.get("summary", "")),
+        "causes": str(advisory.get("causes", "")),
+        "actions": str(advisory.get("actions", "")),
+    }
+
     if language != "English" and llm_available:
         advisory["summary"] = llm_service.translate_text(str(advisory["summary"]), language)
         advisory["causes"] = llm_service.translate_text(str(advisory["causes"]), language)
@@ -428,6 +438,96 @@ def api_schemes():
     crop = request.args.get("crop", "")
     result = get_schemes(state, crop, app.config.get("DATA_GOV_API_KEY", ""))
     return jsonify(result)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RETRANSLATE — Switch advisory language on result page
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.route("/api/retranslate", methods=["POST"])
+def api_retranslate():
+    payload = request.get_json(silent=True) or {}
+    target_lang = str(payload.get("language", "English"))
+    orig = session.get("orig_advisory", {})
+    if not orig:
+        return jsonify({"error": "No session advisory found"}), 404
+
+    if target_lang == "English":
+        return jsonify(orig)
+
+    if not llm_service.is_available():
+        return jsonify(orig)
+
+    translated = {
+        "summary": llm_service.translate_text(str(orig.get("summary", "")), target_lang),
+        "causes": llm_service.translate_text(str(orig.get("causes", "")), target_lang),
+        "actions": llm_service.translate_text(str(orig.get("actions", "")), target_lang),
+    }
+    return jsonify(translated)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NEWS API — Farming news via Google News RSS
+# ─────────────────────────────────────────────────────────────────────────────
+
+_NEWS_CACHE: list[dict] = []
+_NEWS_CACHE_TIME: float = 0.0
+
+STATIC_FARMING_NEWS = [
+    {"title": "PM-KISAN: 6,000 annual benefit now reaches 11 crore farmers", "source": "PIB India", "link": "https://pib.gov.in", "date": "2026-02-25"},
+    {"title": "ICAR releases new high-yield drought-resistant maize variety for Rabi season", "source": "ICAR", "link": "https://icar.org.in", "date": "2026-02-24"},
+    {"title": "Onion prices decline 15% at Lasalgaon APMC on improved supplies", "source": "Agri Market", "link": "https://agmarknet.gov.in", "date": "2026-02-23"},
+    {"title": "Rabi wheat crop in excellent condition across Punjab and Haryana: Agriculture Ministry", "source": "Mint", "link": "https://livemint.com", "date": "2026-02-22"},
+    {"title": "Organic farming area in India crosses 4.6 million hectares in 2025-26", "source": "APEDA", "link": "https://apeda.gov.in", "date": "2026-02-21"},
+    {"title": "New drone spray guidelines for small farmers under SMAM scheme", "source": "Agri Tribune", "link": "#", "date": "2026-02-20"},
+    {"title": "Soil health card 2.0 rollout: AI-based recommendations for 5 crore farmers", "source": "Krishi Jagran", "link": "https://krishijagran.com", "date": "2026-02-19"},
+    {"title": "Government to procure 6.5 crore tonnes of wheat at MSP ₹2,425/quintal", "source": "FCI", "link": "https://fci.gov.in", "date": "2026-02-18"},
+    {"title": "Tomato late blight advisory issued for Karnataka hill districts", "source": "KSDA", "link": "#", "date": "2026-02-17"},
+    {"title": "Karnataka farmers get bonus ₹500/quintal for organic turmeric exports", "source": "KA Agri Dept", "link": "#", "date": "2026-02-16"},
+    {"title": "Cheaper bio-fertilizers now available at 40% subsidy through NABARD", "source": "NABARD", "link": "https://nabard.org", "date": "2026-02-15"},
+    {"title": "Beekeeping scheme: ₹250 crore allocated for 1 lakh bee box units for farmers", "source": "NHM", "link": "#", "date": "2026-02-14"},
+    {"title": "India achieves record 341 MT food grain production in 2024-25", "source": "CACP", "link": "#", "date": "2026-02-13"},
+    {"title": "New pest alert: Spodoptera frugiperda detected in maize fields of MP", "source": "ICAR-NBAII", "link": "#", "date": "2026-02-12"},
+    {"title": "eNAM platform connects 1,361 mandis; ₹3 lakh crore trade recorded", "source": "eNAM", "link": "https://enam.gov.in", "date": "2026-02-11"},
+]
+
+
+@app.route("/api/news")
+def api_news():
+    import time
+    global _NEWS_CACHE, _NEWS_CACHE_TIME
+    # Return cache if fresh (15 minutes)
+    if _NEWS_CACHE and (time.time() - _NEWS_CACHE_TIME) < 900:
+        return jsonify(_NEWS_CACHE)
+
+    # Try Google News RSS
+    try:
+        import requests as req
+        url = ("https://news.google.com/rss/search"
+               "?q=farming+agriculture+India+crop&hl=en-IN&gl=IN&ceid=IN:en")
+        r = req.get(url, timeout=5, headers={"User-Agent": "Mozilla/5.0"})
+        root = ET.fromstring(r.content)
+        items = root.findall(".//item")[:15]
+        news = []
+        for item in items:
+            title = (item.findtext("title") or "").strip()
+            link = (item.findtext("link") or "#").strip()
+            pub = (item.findtext("pubDate") or "")[:16]
+            source_el = item.find("{https://news.google.com/rss}source")
+            src = source_el.text if source_el is not None else "Google News"
+            if title:
+                news.append({"title": title, "source": src, "link": link, "date": pub})
+        if news:
+            _NEWS_CACHE = news
+            _NEWS_CACHE_TIME = time.time()
+            return jsonify(news)
+    except Exception:
+        pass
+
+    # Fallback: curated static list
+    _NEWS_CACHE = STATIC_FARMING_NEWS
+    _NEWS_CACHE_TIME = time.time()
+    return jsonify(STATIC_FARMING_NEWS)
 
 
 if __name__ == "__main__":

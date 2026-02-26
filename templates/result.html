@@ -1,11 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Analysis Report — Sashyasnehi AI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </head>
 <body>
 
@@ -26,6 +27,7 @@
           <option value="Kannada" {% if language == 'Kannada' %}selected{% endif %}>Kannada</option>
         </select>
       </li>
+      <li><button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle dark mode">&#127769;</button></li>
       <li><a href="{{ url_for('upload') }}" class="btn-nav">New Analysis</a></li>
     </ul>
   </nav>
@@ -315,15 +317,15 @@
       <h2>Crop Advisory</h2>
       <div class="advisory-section">
         <h3>Summary</h3>
-        <p>{{ advisory.summary }}</p>
+        <p id="advisory-summary">{{ advisory.summary }}</p>
       </div>
       <div class="advisory-section">
         <h3>Possible Causes</h3>
-        <p>{{ advisory.causes }}</p>
+        <p id="advisory-causes">{{ advisory.causes }}</p>
       </div>
       <div class="advisory-section">
         <h3>Recommended Actions</h3>
-        <p>{{ advisory.actions }}</p>
+        <p id="advisory-actions">{{ advisory.actions }}</p>
       </div>
       {% if advisory.chemicals_to_avoid %}
         <div class="advisory-section">
@@ -427,10 +429,42 @@
     let language = {{ language|tojson }};
     let conversationHistory = [];
 
-    // ── Language Switcher ────────────────────────────────────────────
-    document.getElementById('langSwitcher').addEventListener('change', function() {
-      language = this.value;
-      document.getElementById('currentLang').textContent = language;
+    // ── Language Switcher (live re-translate) ───────────────────────────
+    const langSpinner = document.createElement('span');
+    langSpinner.id = 'langSpinner';
+    langSpinner.style.cssText = 'font-size:0.8rem;color:var(--muted);margin-left:4px;display:none;';
+    langSpinner.textContent = ' Translating...';
+    document.getElementById('langSwitcher').insertAdjacentElement('afterend', langSpinner);
+
+    document.getElementById('langSwitcher').addEventListener('change', async function () {
+      const newLang = this.value;
+      language = newLang;
+      document.getElementById('currentLang').textContent = newLang;
+      if (newLang === {{ language|tojson }}) return; // same as original, no fetch needed
+      langSpinner.style.display = 'inline';
+      try {
+        const resp = await fetch('{{ url_for("api_retranslate") }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ language: newLang })
+        });
+        const d = await resp.json();
+        if (d.summary) {
+          const sumEl = document.getElementById('advisory-summary');
+          if (sumEl) sumEl.innerHTML = d.summary.replace(/\n/g, '<br>');
+        }
+        if (d.causes) {
+          const cauEl = document.getElementById('advisory-causes');
+          if (cauEl) cauEl.innerHTML = d.causes.replace(/\n/g, '<br>');
+        }
+        if (d.actions) {
+          const actEl = document.getElementById('advisory-actions');
+          if (actEl) actEl.innerHTML = d.actions.replace(/\n/g, '<br>');
+        }
+      } catch (e) {
+        console.warn('Translation request failed', e);
+      }
+      langSpinner.style.display = 'none';
     });
 
     // ── Side Panel ───────────────────────────────────────────────────

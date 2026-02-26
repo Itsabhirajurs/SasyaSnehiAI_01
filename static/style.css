@@ -366,3 +366,166 @@ a:hover{text-decoration:underline;}
   .nav-links{gap:2px;}
   .nav-links a{padding:6px 8px;font-size:0.82rem;}
 }
+
+/* ============================================================
+   DARK MODE VARIABLES
+   ============================================================ */
+[data-theme="dark"] {
+  --bg: #0d1a0d;
+  --bg2: #142014;
+  --card: #1a2e1a;
+  --text: #e0efe0;
+  --muted: #7ab077;
+  --accent: #3dbf6e;
+  --accent-dark: #5fd98a;
+  --accent-light: #1e3a1e;
+  --warn: #ff8c57;
+  --warn-bg: #2a1505;
+  --info: #64b5f6;
+  --info-bg: #0d1e2e;
+  --shadow: 0 2px 16px rgba(0,0,0,0.45);
+  --shadow-md: 0 4px 24px rgba(0,0,0,0.6);
+}
+[data-theme="dark"] .navbar{background:#111e11;border-bottom-color:#1e3a1e;}
+[data-theme="dark"] .hero-section{background:linear-gradient(135deg,#0f2f18 0%,#1a5030 45%,#1e6b3c 100%);}
+[data-theme="dark"] .market-hero{background:linear-gradient(135deg,#0f2f18,#1a5030);}
+[data-theme="dark"] .about-hero{background:linear-gradient(120deg,#0f2f18 0%,#1e5030 100%);}
+[data-theme="dark"] .chat-thread{background:#0f1a0f;border-color:#1e3a1e;}
+[data-theme="dark"] .chat-msg.ai .chat-bubble{background:#1a2e1a;border-color:#2a4a2a;}
+[data-theme="dark"] .chat-input-row{background:#1a2e1a;border-color:#1e3a1e;}
+[data-theme="dark"] .chat-input-row textarea{color:var(--text);}
+[data-theme="dark"] .drop-zone{background:#141e14;border-color:#1e3a1e;}
+[data-theme="dark"] .form-group input,[data-theme="dark"] .form-group select,[data-theme="dark"] .form-group textarea{background:#141e14;border-color:#2a4a2a;color:var(--text);}
+[data-theme="dark"] .side-panel{background:#1a2e1a;}
+[data-theme="dark"] .news-panel{background:#1a2e1a;border-right-color:#2a4a2a;}
+[data-theme="dark"] .news-item{background:#141e14;border-color:#2a4a2a;}
+[data-theme="dark"] .forecast-day{background:#141e14;border-color:#2a4a2a;}
+[data-theme="dark"] .forecast-day.today{background:#1e3a1e;}
+
+/* ============================================================
+   DARK MODE TOGGLE BUTTON
+   ============================================================ */
+.theme-toggle-btn{
+  background:var(--bg2);border:1.5px solid #cde0cb;border-radius:50%;
+  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:1.05rem;flex-shrink:0;
+  transition:background var(--transition),border-color var(--transition);
+  padding:0;
+}
+.theme-toggle-btn:hover{background:var(--accent-light);border-color:var(--accent);}
+[data-theme="dark"] .theme-toggle-btn{background:var(--bg2);border-color:#2a4a2a;}
+
+/* ============================================================
+   ANIMATED FLOATING BACKGROUND PARTICLES
+   ============================================================ */
+.bg-particles{
+  position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;
+}
+.bg-particles span{
+  position:absolute;bottom:-60px;
+  animation:bgFloatUp linear infinite;
+  opacity:0;
+  user-select:none;
+  filter:blur(0.3px);
+  will-change:transform,opacity;
+}
+@keyframes bgFloatUp{
+  0%{transform:translateY(0) rotate(0deg);opacity:0;}
+  8%{opacity:0.13;}
+  88%{opacity:0.09;}
+  100%{transform:translateY(-105vh) rotate(360deg);opacity:0;}
+}
+/* Ensure all content is above particles */
+.navbar,.page-wrap,.container,.side-panel,.side-panel-overlay,
+.news-panel,.news-overlay,.news-fab-btn,.panel-toggle-btn,.theme-toggle-btn,
+footer.footer{position:relative;z-index:1;}
+
+/* ============================================================
+   NEWS TICKER — Left Side Panel + FAB Button
+   ============================================================ */
+.news-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:149;
+}
+.news-overlay.active{display:block;}
+
+.news-panel{
+  position:fixed;left:0;top:60px;bottom:0;width:290px;max-width:92vw;
+  background:var(--card);border-right:1px solid #dcebd8;
+  z-index:150;overflow:hidden;display:flex;flex-direction:column;
+  transform:translateX(-100%);transition:transform 0.3s cubic-bezier(.25,.8,.25,1);
+  box-shadow:4px 0 24px rgba(0,0,0,0.12);
+}
+.news-panel.open{transform:translateX(0);}
+.news-panel-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;background:var(--accent-dark);color:#fff;
+  font-weight:700;font-size:0.92rem;flex-shrink:0;
+}
+.news-close-btn{
+  background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;
+  line-height:1;padding:0 4px;opacity:0.8;
+}
+.news-close-btn:hover{opacity:1;}
+.news-scroll{
+  flex:1;overflow:hidden;padding:10px 8px;scrollbar-width:thin;
+}
+.news-loading,.news-empty{
+  text-align:center;padding:32px 16px;color:var(--muted);font-size:0.85rem;
+}
+.news-item{
+  display:block;background:var(--bg);border:1px solid #dcebd8;border-radius:10px;
+  padding:10px 12px;margin-bottom:8px;text-decoration:none;color:inherit;
+  transition:box-shadow var(--transition),border-color var(--transition);
+}
+.news-item:hover{box-shadow:var(--shadow);border-color:var(--accent);text-decoration:none;}
+.news-item-title{
+  font-size:0.8rem;font-weight:600;color:var(--text);
+  margin-bottom:4px;line-height:1.45;
+}
+.news-item-meta{
+  display:flex;justify-content:space-between;gap:6px;font-size:0.7rem;color:var(--muted);
+}
+.news-src{font-weight:600;color:var(--accent);}
+.news-date{flex-shrink:0;}
+
+/* FAB Button for news */
+.news-fab-btn{
+  position:fixed;left:12px;bottom:80px;z-index:160;
+  background:var(--accent-dark);color:#fff;border:none;border-radius:50px;
+  padding:10px 14px;display:flex;align-items:center;gap:7px;
+  cursor:pointer;font-family:inherit;font-size:0.82rem;font-weight:700;
+  box-shadow:0 4px 18px rgba(30,107,60,0.4);
+  transition:background var(--transition),transform var(--transition);
+}
+.news-fab-btn:hover,.news-fab-btn.active{background:var(--accent);transform:scale(1.04);}
+.news-fab-icon{font-size:1.1rem;}
+.news-fab-label{}
+@media(max-width:600px){.news-fab-label{display:none;}.news-fab-btn{border-radius:50%;padding:12px;width:50px;height:50px;justify-content:center;}}
+
+/* ============================================================
+   HOME PAGE — Extra sections
+   ============================================================ */
+.crop-calendar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-top:16px;}
+.cal-card{background:var(--card);border-radius:12px;padding:16px;border:1px solid #e0eadd;box-shadow:var(--shadow);}
+.cal-month-badge{font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;background:var(--accent-light);color:var(--accent-dark);border-radius:40px;padding:3px 10px;display:inline-block;margin-bottom:10px;}
+.cal-card h4{font-size:0.9rem;font-weight:700;color:var(--text);margin-bottom:6px;}
+.cal-card ul{list-style:none;padding:0;margin:0;}
+.cal-card li{font-size:0.8rem;color:var(--muted);padding:2px 0;display:flex;align-items:center;gap:5px;}
+.cal-card li::before{content:'🌱';font-size:0.7rem;}
+
+.tips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;margin-top:16px;}
+.tip-card{background:var(--card);border-radius:12px;padding:20px;border:1px solid #e0eadd;box-shadow:var(--shadow);display:flex;gap:14px;align-items:flex-start;}
+.tip-icon{font-size:1.8rem;flex-shrink:0;margin-top:2px;}
+.tip-card h4{font-size:0.92rem;font-weight:700;color:var(--accent-dark);margin-bottom:4px;}
+.tip-card p{font-size:0.82rem;color:var(--muted);line-height:1.5;}
+
+.disease-alert-card{background:var(--warn-bg);border:1px solid #f5c6a0;border-radius:12px;padding:16px;display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;}
+.da-icon{font-size:1.5rem;flex-shrink:0;}
+.da-crop{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--warn);background:rgba(181,71,8,0.1);border-radius:40px;padding:2px 9px;display:inline-block;margin-bottom:4px;}
+.da-title{font-size:0.88rem;font-weight:700;color:var(--text);margin-bottom:3px;}
+.da-desc{font-size:0.8rem;color:var(--muted);}
+
+.hero-scroll-hint{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;opacity:0.5;animation:arrowBounce 1.8s infinite;}
+.hero-scroll-hint span{font-size:0.75rem;color:#fff;letter-spacing:0.05em;}
+@keyframes arrowBounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(6px);}}
+
