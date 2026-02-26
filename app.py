@@ -198,7 +198,9 @@ def analyze():
     schemes = get_schemes(location_info.get("state"), plant_name, app.config.get("DATA_GOV_API_KEY", ""))
 
     # ── NEW: Market prices ───────────────────────────────────────────────────
-    market = get_market_prices(plant_name, location_info.get("state"), app.config.get("DATA_GOV_API_KEY", ""))
+    market = get_market_prices(plant_name, location_info.get("state"),
+                               app.config.get("DATA_GOV_API_KEY", ""),
+                               app.config.get("ALPHA_VANTAGE_KEY", ""))
 
     # ── NEW: Nearby agri shops ───────────────────────────────────────────────
     nearby_shops = get_nearby_shops(latitude, longitude, app.config.get("GOOGLE_MAPS_API_KEY", ""),
@@ -377,7 +379,9 @@ def community_solve():
 def market_page():
     crop = request.args.get("crop", "Tomato")
     state = request.args.get("state", "")
-    market_data = get_market_prices(crop, state, app.config.get("DATA_GOV_API_KEY", ""))
+    market_data = get_market_prices(crop, state,
+                                    app.config.get("DATA_GOV_API_KEY", ""),
+                                    app.config.get("ALPHA_VANTAGE_KEY", ""))
     return render_template("market.html", market=market_data, crop=crop, state=state)
 
 

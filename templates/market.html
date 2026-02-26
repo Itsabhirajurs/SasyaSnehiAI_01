@@ -71,9 +71,28 @@
       </div>
       <div class="kpi-card" style="background:var(--accent-light);border-color:var(--accent);">
         <span class="kpi-val" style="color:var(--accent-dark);">&#8377;{{ market.predicted_next_week }}</span>
-        <span class="kpi-lbl">ML Prediction (Next Week)</span>
+        <span class="kpi-lbl">
+          {% if market.model_used == 'ML Ridge' %}
+            ML Prediction (Next Week)
+            {% if market.model_r2 is not none %}
+              <span style="font-size:0.72rem;color:var(--muted);">&nbsp;R&#178;={{ '%.2f'|format(market.model_r2) }}</span>
+            {% endif %}
+          {% else %}
+            Predicted (Next Week)
+          {% endif %}
+        </span>
       </div>
     </div>
+
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;">
+      &#128204; Data source: <strong>{{ market.source }}</strong>
+      {% if market.model_used %}
+        &bull; Prediction model: <strong>{{ market.model_used }}</strong>
+        {% if market.model_r2 is not none %}
+          (R&#178;={{ '%.2f'|format(market.model_r2) }})
+        {% endif %}
+      {% endif %}
+    </p>
 
     {% if market.note %}
       <p style="color:var(--muted);font-size:0.82rem;margin-bottom:16px;background:var(--bg2);padding:8px 14px;border-radius:8px;">

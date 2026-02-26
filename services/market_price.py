@@ -8,12 +8,75 @@ Fallback: Rich realistic Indian market simulation with proper seasonal patterns,
 
 from __future__ import annotations
 
+import json
 import math
+import pickle
 import random
 import statistics
 from datetime import datetime, timedelta
+from pathlib import Path
 
+import numpy as np
 import requests
+
+# ── Sklearn price model loading ──────────────────────────────────────────────
+_PRICE_MODELS_DIR = Path(__file__).parent.parent / "model" / "price_models"
+_MODEL_CACHE: dict[str, object] = {}
+_METADATA_CACHE: dict[str, dict] = {}
+
+
+def _load_price_model(crop_key: str):
+    """Lazy-load sklearn pipeline from .pkl; cache in memory."""
+    if crop_key in _MODEL_CACHE:
+        return _MODEL_CACHE[crop_key]
+    pkl_path = _PRICE_MODELS_DIR / f"{crop_key}.pkl"
+    if not pkl_path.exists():
+        return None
+    try:
+        with open(pkl_path, "rb") as f:
+            model = pickle.load(f)
+        _MODEL_CACHE[crop_key] = model
+        return model
+    except Exception:
+        return None
+
+
+def _get_model_meta(crop_key: str) -> dict:
+    """Return metadata (mae, r2, mape) for a crop model."""
+    if _METADATA_CACHE:
+        return _METADATA_CACHE.get(crop_key, {})
+    meta_path = _PRICE_MODELS_DIR / "metadata.json"
+    if meta_path.exists():
+        try:
+            with open(meta_path) as f:
+                data = json.load(f)
+            _METADATA_CACHE.update(data)
+        except Exception:
+            pass
+    return _METADATA_CACHE.get(crop_key, {})
+
+
+def _ml_predict_next(crop_key: str, prices: list[float]) -> float | None:
+    """Use trained sklearn Ridge pipeline to predict next-week price."""
+    if len(prices) < 8:
+        return None
+    model = _load_price_model(crop_key)
+    if model is None:
+        return None
+    try:
+        idx = len(prices) - 1
+        woy = idx % 52
+        sin_w = math.sin(2 * math.pi * woy / 52)
+        cos_w = math.cos(2 * math.pi * woy / 52)
+        lag1, lag2 = prices[-1], prices[-2]
+        lag4, lag8 = prices[-4], prices[-8]
+        roll4 = sum(prices[-4:]) / 4
+        trend_idx = min(1.0, idx / 260)
+        feat = np.array([[sin_w, cos_w, lag1, lag2, lag4, lag8, roll4, trend_idx]])
+        return float(model.predict(feat)[0])
+    except Exception:
+        return None
+
 
 # data.gov.in resource ID (kept for when it's back online)
 AGMARKNET_RESOURCE_ID = "9ef84268-d588-465a-a308-a864a43d0070"
@@ -126,15 +189,98 @@ CROP_ALIASES: dict[str, str] = {
 
 # ─────────────────────────────────────────────────────────────────────────────
 
-def get_market_prices(plant_name: str, state: str | None, api_key: str) -> dict:
-    """Fetch crop market prices. Tries data.gov.in first, falls back to rich simulation."""
+def get_market_prices(plant_name: str, state: str | None, api_key: str,
+                      alpha_vantage_key: str = "") -> dict:
+    """Fetch crop market prices.
+    Priority: data.gov.in → Alpha Vantage → rich seasonal simulation + ML.
+    """
     if api_key and api_key.strip():
         result = _try_data_gov(plant_name, state, api_key.strip())
         if result:
             return result
 
-    # Rich realistic Indian market simulation
+    if alpha_vantage_key and alpha_vantage_key.strip():
+        result = _try_alpha_vantage(plant_name, alpha_vantage_key.strip())
+        if result:
+            return result
+
+    # Rich realistic Indian market simulation + ML prediction
     return _rich_market_simulation(plant_name, state)
+
+
+# Alpha Vantage commodity symbols (maps to crop_key)
+_AV_SYMBOLS: dict[str, str] = {
+    "wheat": "WHEAT",
+    "corn": "CORN",
+    "maize": "CORN",
+    "cotton": "COTTON",
+    "rice": "RICE",
+    # sugarcane sugar is a distinct commodity
+    "sugarcane": "SUGAR",
+}
+
+
+def _try_alpha_vantage(plant_name: str, av_key: str) -> dict | None:
+    """Fetch real price from Alpha Vantage commodity API (free, 25 req/day)."""
+    crop_key = _resolve_crop(plant_name)
+    symbol = _AV_SYMBOLS.get(crop_key)
+    if not symbol:
+        return None  # Only covers above crops
+    try:
+        url = "https://www.alphavantage.co/query"
+        params = {"function": "COMMODITY", "symbol": symbol, "apikey": av_key}
+        r = requests.get(url, params=params, timeout=8)
+        r.raise_for_status()
+        data = r.json()
+        if "Information" in data or "Note" in data:
+            return None  # Rate limit hit
+        records = data.get("data", [])
+        if not records:
+            return None
+        # Alpha Vantage prices are in USD/unit (international). Convert to rough INR/quintal
+        # 1 USD ≈ 83 INR; units vary by commodity but we normalise to /quintal
+        USD_TO_INR = 83
+        UNIT_FACTORS = {"WHEAT": 3.674, "CORN": 3.937, "COTTON": 2.205,
+                        "RICE": 4.409, "SUGAR": 2000.0}  # → INR/Quintal multipliers
+        factor = UNIT_FACTORS.get(symbol, 1.0) * USD_TO_INR
+
+        prices = []
+        for rec in records[:14]:
+            try:
+                prices.append(float(rec["value"]) * factor)
+            except (KeyError, ValueError):
+                continue
+        if not prices:
+            return None
+
+        avg = statistics.mean(prices)
+        ml_pred = _ml_predict_next(crop_key, prices)
+        _, lin_pred, trend_label = _predict_trend(prices)
+        prediction = ml_pred if ml_pred and ml_pred > 0 else lin_pred
+        meta = _get_model_meta(crop_key)
+
+        return {
+            "available": True,
+            "plant": plant_name,
+            "commodity": plant_name.capitalize(),
+            "avg_price": round(avg, 0),
+            "median_price": round(statistics.median(prices), 0),
+            "min_price": round(min(prices), 0),
+            "max_price": round(max(prices), 0),
+            "sample_count": len(prices),
+            "trend": trend_label,
+            "predicted_next_week": round(max(100, prediction), 0),
+            "markets": [],
+            "price_history": prices,
+            "currency": "INR/Quintal (est.)",
+            "last_updated": datetime.now().strftime("%d %b %Y"),
+            "source": "Alpha Vantage (live global commodity)",
+            "model_used": "ML Ridge" if ml_pred else "Linear Regression",
+            "model_r2": meta.get("r2"),
+            "note": "Prices converted from USD international futures — use as indicative trend only.",
+        }
+    except Exception:
+        return None
 
 
 def _try_data_gov(plant_name: str, state: str | None, api_key: str) -> dict | None:
@@ -201,7 +347,11 @@ def _process_records(records: list[dict], plant_name: str) -> dict:
         return None  # type: ignore
 
     avg = statistics.mean(prices)
-    _, prediction, trend_label = _predict_trend(prices)
+    crop_key = _resolve_crop(plant_name)
+    ml_pred = _ml_predict_next(crop_key, prices[-14:] if len(prices) >= 14 else prices)
+    _, lin_pred, trend_label = _predict_trend(prices)
+    prediction = ml_pred if ml_pred and ml_pred > 0 else lin_pred
+    meta = _get_model_meta(crop_key)
 
     return {
         "available": True,
@@ -213,12 +363,14 @@ def _process_records(records: list[dict], plant_name: str) -> dict:
         "max_price": round(max(prices), 0),
         "sample_count": len(prices),
         "trend": trend_label,
-        "predicted_next_week": round(prediction, 0),
+        "predicted_next_week": round(max(100, prediction), 0),
         "markets": markets[:8],
         "price_history": prices[-14:],
         "currency": "INR/Quintal",
         "last_updated": datetime.now().strftime("%d %b %Y"),
         "source": "data.gov.in (AgMarknet)",
+        "model_used": "ML Ridge" if ml_pred else "Linear Regression",
+        "model_r2": meta.get("r2"),
     }
 
 
@@ -258,7 +410,10 @@ def _rich_market_simulation(plant_name: str, state: str | None) -> dict:
         history.append(max(100, round(current, 0)))
 
     avg_price = statistics.mean(history[-7:])  # last 7 weeks avg
-    _, prediction, trend_label = _predict_trend(history)
+    ml_pred = _ml_predict_next(crop_key, history)
+    _, lin_pred, trend_label = _predict_trend(history)
+    prediction = ml_pred if ml_pred and ml_pred > 0 else lin_pred
+    meta = _get_model_meta(crop_key)
 
     # Build mandi list, optionally filtering by state
     mandi_list = mandis.copy()
@@ -304,6 +459,8 @@ def _rich_market_simulation(plant_name: str, state: str | None) -> dict:
         "last_updated": today.strftime("%d %b %Y"),
         "note": "Indicative prices based on seasonal patterns — connect DATA_GOV_API_KEY for live AgMarknet data",
         "source": "Seasonal Simulation",
+        "model_used": "ML Ridge" if (ml_pred and ml_pred > 0) else "Linear Regression",
+        "model_r2": meta.get("r2"),
     }
 
 

@@ -27,6 +27,10 @@ class Config:
     # data.gov.in API key (free farmer data + market prices + govt schemes)
     DATA_GOV_API_KEY = os.getenv("DATA_GOV_API_KEY", "")
 
+    # Alpha Vantage (free tier: 25 req/day) — real commodity prices for WHEAT/CORN/COTTON/RICE/SUGAR
+    # Get a free key at: https://www.alphavantage.co/support/#api-key
+    ALPHA_VANTAGE_KEY = os.getenv("ALPHA_VANTAGE_KEY", "")
+
     # LibreTranslate endpoint (free, no key needed for public instance)
     LIBRETRANSLATE_URL = os.getenv("LIBRETRANSLATE_URL", "https://libretranslate.com")
     LIBRETRANSLATE_API_KEY = os.getenv("LIBRETRANSLATE_API_KEY", "")
