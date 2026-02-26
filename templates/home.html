@@ -3,22 +3,152 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sashyasnehi AI</title>
+  <title>Sashyasnehi AI — Smart Crop Advisory</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <main class="container">
-    <section class="card hero">
+
+  <!-- NAV -->
+  <nav class="navbar">
+    <a class="nav-brand" href="{{ url_for('home') }}">
+      <span class="leaf">🌿</span> Sashyasnehi AI
+    </a>
+    <ul class="nav-links">
+      <li><a href="{{ url_for('home') }}" class="active">Home</a></li>
+      <li><a href="{{ url_for('about') }}">About</a></li>
+      <li><a href="{{ url_for('upload') }}" class="btn-nav">Analyze Crop</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-wrap">
+
+    <!-- HERO -->
+    <section class="hero-section">
       <h1>🌱 Sashyasnehi AI</h1>
-      <p>Intelligent crop advisory MVP for farmers.</p>
-      <ul>
-        <li>Image-based disease detection</li>
-        <li>Severity and environmental risk analysis</li>
-        <li>Chemical safety warnings and alternatives</li>
-        <li>Multilingual AI guidance (English / Hindi / Kannada)</li>
-      </ul>
-      <a class="btn" href="{{ url_for('upload') }}">Get Started</a>
+      <p class="tagline">AI-powered crop disease detection &amp; smart advisory for Indian farmers — instant, multilingual, free.</p>
+      <div class="hero-badges">
+        <span class="badge">🧠 MobileNetV2 AI</span>
+        <span class="badge">🌤 Weather Risk</span>
+        <span class="badge">⚗️ Chemical Safety</span>
+        <span class="badge">💬 Gemini Chat</span>
+        <span class="badge">🇮🇳 Hindi · Kannada · English</span>
+      </div>
+      <a class="hero-cta" href="{{ url_for('upload') }}">
+        📸 Start Analysis →
+      </a>
     </section>
-  </main>
+
+    <!-- FEATURES -->
+    <h2 class="section-heading">What Sashyasnehi Does</h2>
+    <p class="section-sub">Eight intelligent modules working together for complete crop health insight.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">🔬</span>
+        <h3>Disease Detection</h3>
+        <p>MobileNetV2 transfer learning identifies crop diseases from leaf photos with high accuracy.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📊</span>
+        <h3>Severity Estimation</h3>
+        <p>HSV colour analysis measures the infected area percentage and classifies it as Mild, Moderate, or Severe.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🌦</span>
+        <h3>Weather Risk Scoring</h3>
+        <p>Live OpenWeather data — humidity, temperature and rain probability — adjusts the overall disease risk score.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">⚠️</span>
+        <h3>Chemical Safety</h3>
+        <p>Cross-checks your past chemicals against a safety database and flags soil &amp; health hazards with safer alternatives.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📋</span>
+        <h3>Smart Advisory</h3>
+        <p>Rule-based engine generates contextual treatment steps, watering advice and soil-specific guidance.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🤖</span>
+        <h3>Gemini AI Chat</h3>
+        <p>Ask follow-up questions in your language. Google Gemini answers with farm-specific context in real time.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🗺️</span>
+        <h3>Nearby Help</h3>
+        <p>For severe cases, find the nearest agricultural consultant or nursery on Google Maps instantly.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🌐</span>
+        <h3>Multilingual</h3>
+        <p>Advisory results translated to English, Hindi or Kannada — more languages coming soon.</p>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <section class="steps-section">
+      <h2 class="section-heading" style="text-align:left;margin-bottom:4px;">How It Works</h2>
+      <p class="section-sub" style="text-align:left;margin-bottom:0;">Four simple steps to a full crop health report.</p>
+      <div class="steps-grid">
+        <div class="step">
+          <div class="step-num">1</div>
+          <strong>Upload Image</strong>
+          <p>Take a close-up photo of the diseased leaf and upload it.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <strong>Fill Details</strong>
+          <p>Add chemicals used, soil type, watering habits and optional location.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <strong>AI Analyzes</strong>
+          <p>Disease model, severity engine and weather risk all process in seconds.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <strong>Get Advisory</strong>
+          <p>Read detailed treatment advice and chat with Gemini for follow-up help.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <span class="stat-num">6</span>
+        <span class="stat-label">Crop Diseases</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">8</span>
+        <span class="stat-label">AI Modules</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">3</span>
+        <span class="stat-label">Languages</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">0₹</span>
+        <span class="stat-label">Cost to Use</span>
+      </div>
+    </div>
+
+    <!-- CTA CARD -->
+    <div class="card" style="text-align:center;padding:36px;">
+      <h2 style="font-size:1.5rem;margin-bottom:10px;">Ready to diagnose your crop?</h2>
+      <p style="color:var(--muted);margin-bottom:24px;">Upload a leaf photo and get a full AI-powered advisory in under 10 seconds.</p>
+      <a class="btn" href="{{ url_for('upload') }}" style="font-size:1.05rem;padding:13px 36px;">📸 Analyze My Crop</a>
+      &nbsp;&nbsp;
+      <a class="btn-secondary" href="{{ url_for('about') }}" style="font-size:1rem;padding:12px 24px;">Learn More</a>
+    </div>
+
+  </div><!-- /page-wrap -->
+
+  <footer class="footer">
+    Sashyasnehi AI &copy; 2025 &nbsp;·&nbsp;
+    Built with Flask, TensorFlow &amp; Gemini &nbsp;·&nbsp;
+    <a href="{{ url_for('about') }}">About</a>
+  </footer>
+
 </body>
 </html>

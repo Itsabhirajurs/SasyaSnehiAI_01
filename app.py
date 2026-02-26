@@ -60,6 +60,11 @@ def home():
     return render_template("home.html")
 
 
+@app.route("/about")
+def about():
+    return render_template("info.html")
+
+
 @app.route("/upload")
 def upload():
     return render_template("upload.html", languages=app.config["SUPPORTED_LANGUAGES"])

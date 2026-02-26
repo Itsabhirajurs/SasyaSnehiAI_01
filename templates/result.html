@@ -3,90 +3,197 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Advisory Result</title>
+  <title>Advisory Result — Sashyasnehi AI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <main class="container">
-    <section class="card">
-      <h2>Analysis Result</h2>
-      {% if prediction_error %}
-        <p class="warn">Model warning: {{ prediction_error }}</p>
-      {% endif %}
-      {% if not llm_available %}
-        <p class="info">LLM is not configured. Advisory is shown in rule-based mode. Add GEMINI_API_KEY in .env for multilingual AI responses and richer chat.</p>
-      {% endif %}
 
+  <!-- NAV -->
+  <nav class="navbar">
+    <a class="nav-brand" href="{{ url_for('home') }}">
+      <span class="leaf">🌿</span> Sashyasnehi AI
+    </a>
+    <ul class="nav-links">
+      <li><a href="{{ url_for('home') }}">Home</a></li>
+      <li><a href="{{ url_for('about') }}">About</a></li>
+      <li><a href="{{ url_for('upload') }}" class="btn-nav">New Analysis</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-wrap">
+
+    <div class="page-header">
+      <h2>📋 Analysis Report</h2>
+      <p>Full AI advisory based on your uploaded image and farm details.</p>
+    </div>
+
+    <!-- NOTICES -->
+    {% if prediction_error %}
+      <p class="warn" style="margin-bottom:12px;">⚠️ {{ prediction_error }}</p>
+    {% endif %}
+    {% if not llm_available %}
+      <p class="info" style="margin-bottom:12px;">ℹ️ Gemini AI is not configured. Advisory shown in rule-based mode. Add <code>GEMINI_API_KEY</code> in .env for multilingual AI chat.</p>
+    {% endif %}
+
+    <!-- DETECTION CARD -->
+    <div class="card">
+      <h2>🔍 Disease Detection</h2>
       <img src="{{ image_url }}" alt="Uploaded plant image" class="preview-img">
 
       <div class="result-grid">
-        <p><strong>Plant Name:</strong> {{ plant_name }}</p>
-        <p><strong>Detected Disease:</strong> {{ disease_name }}</p>
-        <p><strong>Confidence %:</strong> {{ confidence }}</p>
-        <p><strong>Severity Level:</strong> {{ severity.category }} ({{ severity.percentage }}%)</p>
-        <p><strong>Environmental Risk:</strong> {{ weather.risk_level }} (Score: {{ weather.risk_score }})</p>
-        <p><strong>Humidity:</strong> {{ weather.humidity if weather.humidity is not none else 'N/A' }}</p>
-        <p><strong>Temperature:</strong> {{ weather.temperature if weather.temperature is not none else 'N/A' }}</p>
-        <p><strong>Rain Probability:</strong> {{ weather.rain_probability if weather.rain_probability is not none else 'N/A' }}</p>
+        <div class="detail-item">
+          <div class="label">Plant</div>
+          <div class="value">{{ plant_name }}</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Detected Disease</div>
+          <div class="value">{{ disease_name }}</div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Model Confidence</div>
+          <div class="value">{{ confidence }}%</div>
+          <div class="conf-bar-wrap">
+            <div class="conf-bar" style="width:{{ confidence }}%"></div>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="label">Severity</div>
+          <div class="value">
+            <span class="severity-badge severity-{{ severity.category | lower }}">
+              {{ severity.category }}
+            </span>
+            &nbsp; {{ severity.percentage }}% infected area
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENVIRONMENTAL RISK -->
+    <div class="card">
+      <h2>🌦 Environmental Risk</h2>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <span style="font-size:1.05rem;font-weight:600;">Risk Level:</span>
+        <span class="risk-badge risk-{{ weather.risk_level | lower }}">{{ weather.risk_level }}</span>
+        <span style="color:var(--muted);font-size:0.88rem;">(score {{ "%.2f"|format(weather.risk_score) }})</span>
+      </div>
+      {% if weather.humidity is not none or weather.temperature is not none %}
+        <div class="weather-grid">
+          <div class="weather-cell">
+            <span class="w-icon">💧</span>
+            <div class="w-val">{{ weather.humidity if weather.humidity is not none else '—' }}%</div>
+            <div class="w-lbl">Humidity</div>
+          </div>
+          <div class="weather-cell">
+            <span class="w-icon">🌡️</span>
+            <div class="w-val">{{ weather.temperature if weather.temperature is not none else '—' }}°C</div>
+            <div class="w-lbl">Temperature</div>
+          </div>
+          <div class="weather-cell">
+            <span class="w-icon">🌧️</span>
+            <div class="w-val">{{ weather.rain_probability if weather.rain_probability is not none else '—' }}%</div>
+            <div class="w-lbl">Rain Probability</div>
+          </div>
+        </div>
+      {% else %}
+        <p style="color:var(--muted);font-size:0.9rem;">Weather data unavailable — add OPENWEATHER_API_KEY and location for live scoring.</p>
+      {% endif %}
+    </div>
+
+    <!-- ADVISORY -->
+    <div class="card">
+      <h2>📋 Crop Advisory</h2>
+
+      <div class="advisory-section">
+        <h3>💡 Summary</h3>
+        <p>{{ advisory.summary }}</p>
       </div>
 
-      <h3>Summary</h3>
-      <p>{{ advisory.summary }}</p>
+      <div class="advisory-section">
+        <h3>🔎 Possible Causes</h3>
+        <p>{{ advisory.causes }}</p>
+      </div>
 
-      <h3>Possible Causes</h3>
-      <p>{{ advisory.causes }}</p>
+      <div class="advisory-section">
+        <h3>✅ Recommended Actions</h3>
+        <p>{{ advisory.actions }}</p>
+      </div>
 
-      <h3>Recommended Actions</h3>
-      <p>{{ advisory.actions }}</p>
-
-      <h3>Chemicals to Avoid</h3>
       {% if advisory.chemicals_to_avoid %}
-        <ul>
-          {% for c in advisory.chemicals_to_avoid %}
-            <li>{{ c }}</li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p>None flagged from provided list.</p>
+        <div class="advisory-section">
+          <h3>🚫 Chemicals to Avoid</h3>
+          <ul>
+            {% for c in advisory.chemicals_to_avoid %}
+              <li>{{ c }}</li>
+            {% endfor %}
+          </ul>
+        </div>
       {% endif %}
 
-      <h3>Safer Alternatives</h3>
       {% if advisory.alternatives %}
-        <ul>
-          {% for alt in advisory.alternatives %}
-            <li>{{ alt }}</li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p>No alternatives required based on provided chemicals.</p>
+        <div class="advisory-section">
+          <h3>🌿 Safer Alternatives</h3>
+          <ul>
+            {% for alt in advisory.alternatives %}
+              <li>{{ alt }}</li>
+            {% endfor %}
+          </ul>
+        </div>
       {% endif %}
+    </div>
 
-      <h3>Chemical Analysis Details</h3>
-      {% if chemical_analysis.findings %}
-        <ul>
+    <!-- CHEMICAL SAFETY -->
+    {% if chemical_analysis.findings %}
+      <div class="card">
+        <h2>⚗️ Chemical Safety Analysis</h2>
+        <ul class="module-list">
           {% for finding in chemical_analysis.findings %}
-            <li><strong>{{ finding.chemical }}</strong>: {{ finding.message }}</li>
+            <li>
+              <span class="m-icon">⚠️</span>
+              <span><strong>{{ finding.chemical }}</strong>: {{ finding.message }}</span>
+            </li>
           {% endfor %}
         </ul>
-      {% else %}
-        <p>No chemical safety inputs were provided.</p>
-      {% endif %}
+      </div>
+    {% endif %}
 
-      {% if nursery_link %}
-        <h3>Nearest Help (Severe Case)</h3>
-        <p><a href="{{ nursery_link }}" target="_blank">Find Nearby Nursery</a></p>
-        <p><a href="{{ consultant_link }}" target="_blank">Find Agriculture Consultant</a></p>
-      {% endif %}
-    </section>
+    <!-- NEARBY HELP (severe) -->
+    {% if nursery_link %}
+      <div class="card" style="border-left:4px solid var(--warn);">
+        <h2>🗺️ Severe Case — Find Nearby Help</h2>
+        <p style="color:var(--muted);margin-bottom:16px;">Severity is high. Consider consulting an agricultural expert near you.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <a href="{{ nursery_link }}" target="_blank" class="btn btn-sm">🌱 Nearby Nursery</a>
+          <a href="{{ consultant_link }}" target="_blank" class="btn-outline btn btn-sm">👨‍🌾 Agriculture Consultant</a>
+        </div>
+      </div>
+    {% endif %}
 
-    <section class="card">
-      <h3>Follow-up Chat</h3>
-      <p>Ask your query in {{ language }}.</p>
-      <textarea id="chatQuestion" rows="3" placeholder="Type your question..."></textarea>
-      <button class="btn" onclick="sendChat()">Ask AI</button>
-      <div id="chatAnswer" class="chat-box"></div>
-    </section>
-  </main>
+    <!-- AI CHAT -->
+    <div class="card">
+      <h2>💬 Ask AI About Your Crop</h2>
+      <p style="color:var(--muted);margin-bottom:16px;font-size:0.9rem;">
+        Ask a follow-up question in <strong>{{ language }}</strong> and Gemini AI will answer with your crop context.
+      </p>
+      <div class="chat-container">
+        <textarea id="chatQuestion" placeholder="e.g., How often should I spray? What organic treatment can I use?"></textarea>
+        <div>
+          <button class="btn" onclick="sendChat()">🤖 Ask AI</button>
+        </div>
+        <div id="chatAnswer" class="chat-box" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- FOOTER ACTIONS -->
+    <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;">
+      <a class="btn-secondary" href="{{ url_for('upload') }}">← New Analysis</a>
+      <a class="btn" href="{{ url_for('home') }}">🏠 Home</a>
+    </div>
+
+  </div><!-- /page-wrap -->
+
+  <footer class="footer">
+    Sashyasnehi AI &copy; 2025 &nbsp;·&nbsp; <a href="{{ url_for('about') }}">About</a>
+  </footer>
 
   <script>
     const advisoryContext = {{ advisory_context|tojson }};
@@ -95,12 +202,11 @@
     async function sendChat() {
       const question = document.getElementById('chatQuestion').value.trim();
       const answerBox = document.getElementById('chatAnswer');
-      if (!question) {
-        answerBox.innerText = 'Please type a question.';
-        return;
-      }
+      if (!question) { answerBox.style.display = 'block'; answerBox.innerText = 'Please type a question first.'; return; }
 
-      answerBox.innerText = 'Thinking...';
+      answerBox.style.display = 'block';
+      answerBox.style.opacity = '0.6';
+      answerBox.innerText = '⏳ Thinking…';
 
       try {
         const response = await fetch('{{ url_for("chat") }}', {
@@ -108,11 +214,12 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question, context: advisoryContext, language })
         });
-
         const data = await response.json();
+        answerBox.style.opacity = '1';
         answerBox.innerText = data.answer || 'No response generated.';
-      } catch (error) {
-        answerBox.innerText = 'Unable to connect to chat service right now.';
+      } catch (err) {
+        answerBox.style.opacity = '1';
+        answerBox.innerText = '❌ Unable to reach AI service. Please try again.';
       }
     }
   </script>

@@ -3,67 +3,160 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Upload Crop Image</title>
+  <title>Analyze Crop — Sashyasnehi AI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <main class="container">
-    <section class="card">
-      <h2>Upload Diseased Plant Image</h2>
-      <form action="{{ url_for('analyze') }}" method="post" enctype="multipart/form-data" class="form-grid">
-        <label>Plant Image*</label>
-        <input type="file" name="image" accept="image/*" required>
 
-        <label>Previously Used Chemicals (comma separated)</label>
-        <textarea name="chemicals" rows="2" placeholder="e.g., chlorpyrifos, imidacloprid"></textarea>
+  <!-- NAV -->
+  <nav class="navbar">
+    <a class="nav-brand" href="{{ url_for('home') }}">
+      <span class="leaf">🌿</span> Sashyasnehi AI
+    </a>
+    <ul class="nav-links">
+      <li><a href="{{ url_for('home') }}">Home</a></li>
+      <li><a href="{{ url_for('about') }}">About</a></li>
+      <li><a href="{{ url_for('upload') }}" class="btn-nav active">Analyze Crop</a></li>
+    </ul>
+  </nav>
 
-        <label>Soil Type</label>
-        <select name="soil_type">
-          <option value="">Select</option>
-          <option value="Clay">Clay</option>
-          <option value="Sandy">Sandy</option>
-          <option value="Loamy">Loamy</option>
-          <option value="Silty">Silty</option>
-        </select>
+  <div class="page-wrap">
 
-        <label>Watering Frequency (per week or text)</label>
-        <input type="text" name="watering_frequency" placeholder="e.g., 5 / daily / alternate days">
+    <div class="page-header">
+      <h2>📸 Analyze Your Crop</h2>
+      <p>Upload a leaf image and fill in your farm details for a complete AI advisory.</p>
+    </div>
 
-        <label>Tilling Information</label>
-        <input type="text" name="tilling_info" placeholder="Optional">
+    <form action="{{ url_for('analyze') }}" method="post" enctype="multipart/form-data">
 
-        <label>Soil Testing Information (Optional)</label>
-        <textarea name="soil_test_info" rows="3" placeholder="pH, NPK, EC, etc."></textarea>
+      <!-- IMAGE SECTION -->
+      <div class="form-section">
+        <div class="form-section-title">🌿 Crop Image *</div>
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" name="image" accept="image/*" id="img-input" required>
+          <span class="drop-icon">📷</span>
+          <p><strong>Click to browse</strong> or drag &amp; drop your leaf image here</p>
+          <p style="font-size:0.78rem;margin-top:4px;opacity:0.7;">JPG, PNG, WEBP — max 10 MB</p>
+        </div>
+        <div id="img-preview-wrap">
+          <img id="img-preview" src="" alt="Preview">
+        </div>
+      </div>
 
-        <label>Preferred Language</label>
-        <select name="language">
-          {% for lang in languages %}
-            <option value="{{ lang }}">{{ lang }}</option>
-          {% endfor %}
-        </select>
+      <!-- FARM CONTEXT -->
+      <div class="form-section">
+        <div class="form-section-title">🌾 Farm Details</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Soil Type</label>
+            <select name="soil_type">
+              <option value="">— Select —</option>
+              <option value="Clay">Clay</option>
+              <option value="Sandy">Sandy</option>
+              <option value="Loamy">Loamy</option>
+              <option value="Silty">Silty</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Watering Frequency</label>
+            <input type="text" name="watering_frequency" placeholder="e.g., daily / 3× a week">
+          </div>
+          <div class="form-group">
+            <label>Tilling Information <span style="opacity:0.5">(optional)</span></label>
+            <input type="text" name="tilling_info" placeholder="e.g., deep ploughing monthly">
+          </div>
+          <div class="form-group">
+            <label>Preferred Language</label>
+            <select name="language">
+              {% for lang in languages %}
+                <option value="{{ lang }}">{{ lang }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
 
+      <!-- CHEMICALS -->
+      <div class="form-section">
+        <div class="form-section-title">⚗️ Previously Used Chemicals</div>
+        <div class="form-group">
+          <label>Chemical Names <span style="opacity:0.5">(comma-separated, optional)</span></label>
+          <textarea name="chemicals" rows="2" placeholder="e.g., chlorpyrifos, imidacloprid, glyphosate"></textarea>
+        </div>
+        <div class="form-group" style="margin-top:12px;">
+          <label>Soil Test Results <span style="opacity:0.5">(optional)</span></label>
+          <textarea name="soil_test_info" rows="2" placeholder="e.g., pH 6.5, NPK 120-60-40, EC 0.8 dS/m"></textarea>
+        </div>
+      </div>
+
+      <!-- LOCATION -->
+      <div class="form-section">
+        <div class="form-section-title">📍 Location (for weather risk)</div>
         <input type="hidden" name="latitude" id="latitude">
         <input type="hidden" name="longitude" id="longitude">
+        <div class="location-row">
+          <button type="button" class="btn-secondary" onclick="captureLocation()">📍 Use My Location</button>
+          <span id="location-status">Location not captured — weather risk will use defaults.</span>
+        </div>
+      </div>
 
-        <button type="button" class="btn-secondary" onclick="captureLocation()">Use My Location</button>
-        <button type="submit" class="btn">Analyze</button>
-      </form>
-    </section>
-  </main>
+      <!-- SUBMIT -->
+      <div class="form-actions">
+        <a href="{{ url_for('home') }}" class="btn-secondary">← Back</a>
+        <button type="submit" class="btn">🔍 Run Analysis</button>
+      </div>
+
+    </form>
+
+  </div><!-- /page-wrap -->
+
+  <footer class="footer">
+    Sashyasnehi AI &copy; 2025 &nbsp;·&nbsp; <a href="{{ url_for('about') }}">About</a>
+  </footer>
 
   <script>
+    // Image preview
+    const input = document.getElementById('img-input');
+    const preview = document.getElementById('img-preview');
+    const wrap = document.getElementById('img-preview-wrap');
+    const dropZone = document.getElementById('drop-zone');
+
+    input.addEventListener('change', () => showPreview(input.files[0]));
+
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file) { input.files = e.dataTransfer.files; showPreview(file); }
+    });
+
+    function showPreview(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        preview.src = e.target.result;
+        wrap.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Geolocation
     function captureLocation() {
+      const status = document.getElementById('location-status');
       if (!navigator.geolocation) {
-        alert('Geolocation is not supported in this browser.');
+        status.textContent = 'Geolocation not supported in this browser.';
         return;
       }
+      status.textContent = 'Detecting location…';
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          document.getElementById('latitude').value = position.coords.latitude;
-          document.getElementById('longitude').value = position.coords.longitude;
-          alert('Location captured successfully.');
+        (pos) => {
+          document.getElementById('latitude').value = pos.coords.latitude;
+          document.getElementById('longitude').value = pos.coords.longitude;
+          status.textContent = `✅ Location captured (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`;
         },
-        () => alert('Unable to capture location. You can continue without it.')
+        () => { status.textContent = 'Unable to get location. Continuing without it.'; }
       );
     }
   </script>
