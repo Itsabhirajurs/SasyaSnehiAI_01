@@ -76,7 +76,12 @@ def main() -> None:
     val_ds = val_ds.prefetch(buffer_size=autotune)
 
     model = build_model(num_classes=len(class_names))
-    model.fit(train_ds, validation_data=val_ds, epochs=args.epochs)
+    callbacks = [
+        tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=2, restore_best_weights=True),
+        tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=1, min_lr=1e-6),
+    ]
+
+    model.fit(train_ds, validation_data=val_ds, epochs=args.epochs, callbacks=callbacks)
 
     model_out = Path(args.model_out)
     class_map_out = Path(args.class_map_out)

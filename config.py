@@ -19,7 +19,7 @@ class Config:
     OPENWEATHER_BASE_URL = os.getenv("OPENWEATHER_BASE_URL", "https://api.openweathermap.org/data/2.5")
 
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "models/gemini-2.0-flash")
 
     MAX_CONTENT_LENGTH = 8 * 1024 * 1024
     UPLOAD_FOLDER = str(BASE_DIR / "static" / "uploads")

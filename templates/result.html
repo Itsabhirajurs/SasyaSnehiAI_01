@@ -13,6 +13,9 @@
       {% if prediction_error %}
         <p class="warn">Model warning: {{ prediction_error }}</p>
       {% endif %}
+      {% if not llm_available %}
+        <p class="info">LLM is not configured. Advisory is shown in rule-based mode. Add GEMINI_API_KEY in .env for multilingual AI responses and richer chat.</p>
+      {% endif %}
 
       <img src="{{ image_url }}" alt="Uploaded plant image" class="preview-img">
 
@@ -22,7 +25,13 @@
         <p><strong>Confidence %:</strong> {{ confidence }}</p>
         <p><strong>Severity Level:</strong> {{ severity.category }} ({{ severity.percentage }}%)</p>
         <p><strong>Environmental Risk:</strong> {{ weather.risk_level }} (Score: {{ weather.risk_score }})</p>
+        <p><strong>Humidity:</strong> {{ weather.humidity if weather.humidity is not none else 'N/A' }}</p>
+        <p><strong>Temperature:</strong> {{ weather.temperature if weather.temperature is not none else 'N/A' }}</p>
+        <p><strong>Rain Probability:</strong> {{ weather.rain_probability if weather.rain_probability is not none else 'N/A' }}</p>
       </div>
+
+      <h3>Summary</h3>
+      <p>{{ advisory.summary }}</p>
 
       <h3>Possible Causes</h3>
       <p>{{ advisory.causes }}</p>
@@ -50,6 +59,17 @@
         </ul>
       {% else %}
         <p>No alternatives required based on provided chemicals.</p>
+      {% endif %}
+
+      <h3>Chemical Analysis Details</h3>
+      {% if chemical_analysis.findings %}
+        <ul>
+          {% for finding in chemical_analysis.findings %}
+            <li><strong>{{ finding.chemical }}</strong>: {{ finding.message }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No chemical safety inputs were provided.</p>
       {% endif %}
 
       {% if nursery_link %}

@@ -90,6 +90,14 @@ button {
   color: var(--warn);
 }
 
+.info {
+  color: #1f4f8f;
+  background: #eaf3ff;
+  border: 1px solid #c7dcff;
+  border-radius: 8px;
+  padding: 10px;
+}
+
 .chat-box {
   margin-top: 10px;
   padding: 10px;

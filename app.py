@@ -92,7 +92,11 @@ def analyze():
         prediction = model_service.predict(str(save_path))
     except Exception as exc:
         prediction = {"label": "Unknown_Disease", "confidence": 0.0}
-        prediction_error = str(exc)
+        prediction_error = (
+            "Disease model unavailable or not trained yet. "
+            "Run train_model.py to generate model/disease_model.keras and model/class_names.json. "
+            f"Details: {exc}"
+        )
 
     plant_name, disease_name = _parse_label(str(prediction["label"]))
     confidence = float(prediction["confidence"])
@@ -129,7 +133,8 @@ def analyze():
         watering_frequency=watering_frequency,
     )
 
-    if language != "English":
+    llm_available = llm_service.is_available()
+    if language != "English" and llm_available:
         advisory["summary"] = llm_service.translate_text(str(advisory["summary"]), language)
         advisory["causes"] = llm_service.translate_text(str(advisory["causes"]), language)
         advisory["actions"] = llm_service.translate_text(str(advisory["actions"]), language)
@@ -167,6 +172,7 @@ def analyze():
         consultant_link=consultant_link,
         advisory_context=advisory_context,
         prediction_error=prediction_error,
+        llm_available=llm_available,
     )
 
 
