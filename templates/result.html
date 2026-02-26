@@ -473,15 +473,26 @@
     // Apply i18n on page load (in case session language differs from English)
     if (language !== 'English' && window.applyI18n) window.applyI18n(language);
 
-    // ── Side Panel ───────────────────────────────────────────────────
+    // ── Side Panel (Farm Insights dropdown) ─────────────────────────────────
     function togglePanel(open) {
       const panel = document.getElementById('sidePanel');
       const overlay = document.getElementById('panelOverlay');
+      const tab = document.getElementById('insightsDrawerTab');
       const isOpen = open !== undefined ? open : !panel.classList.contains('open');
       panel.classList.toggle('open', isOpen);
       if (overlay) overlay.classList.toggle('active', isOpen);
-      // drawer-tab state is synced via MutationObserver in app.js
+      if (tab) tab.classList.toggle('panel-open', isOpen);
     }
+    // Close insights panel on click outside
+    document.addEventListener('click', function(e) {
+      const panel = document.getElementById('sidePanel');
+      const tab = document.getElementById('insightsDrawerTab');
+      if (!panel) return;
+      if (panel.classList.contains('open') &&
+          !panel.contains(e.target) && tab && !tab.contains(e.target)) {
+        togglePanel(false);
+      }
+    });
 
     function switchTab(el, tabId) {
       document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));

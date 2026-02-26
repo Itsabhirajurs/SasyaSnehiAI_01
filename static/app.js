@@ -265,7 +265,7 @@ window.applyI18n = function(lang) {
     tab.className = 'drawer-tab drawer-tab-left';
     tab.setAttribute('aria-label', 'Toggle farming news');
     tab.innerHTML = `
-      <span class="dtab-arrow" id="newsArrow">&#9654;</span>
+      <span class="dtab-arrow" id="newsArrow">&#9660;</span>
       <span class="dtab-icon">&#128240;</span>
       <span class="dtab-label" id="newsTabLabel">NEWS</span>`;
     tab.addEventListener('click', () => { open ? closeNews() : openNews(); });
@@ -287,13 +287,13 @@ window.applyI18n = function(lang) {
     tab.innerHTML = `
       <span class="dtab-label" id="insightsTabLabel">INSIGHTS</span>
       <span class="dtab-icon">&#127807;</span>
-      <span class="dtab-arrow" id="insightsArrow">&#9664;</span>`;
+      <span class="dtab-arrow" id="insightsArrow">&#9660;</span>`;
     tab.addEventListener('click', () => {
       if (window.togglePanel) window.togglePanel();
     });
     document.body.appendChild(tab);
 
-    // Sync open/close state of right tab with sidePanel via MutationObserver
+    // Sync open/close state of right tab with sidePanel state
     new MutationObserver(() => {
       tab.classList.toggle('panel-open', sidePanel.classList.contains('open'));
     }).observe(sidePanel, { attributes: true, attributeFilter: ['class'] });

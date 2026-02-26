@@ -200,52 +200,46 @@ a:hover{text-decoration:underline;}
 /* Location badge inline */
 .location-badge{font-size:0.82rem;color:var(--muted);background:var(--bg2);border:1px solid #cde0cb;border-radius:40px;padding:3px 10px;}
 
-/* ── LEFT / RIGHT DRAWER TAB TRIGGERS ───────────────────────────────────── */
+/* ── TOP PILL TRIGGERS — News (left) & Insights (right) ─────────────────────── */
 .drawer-tab{
-  position:fixed;top:50%;transform:translateY(-50%);
-  z-index:220;background:var(--accent-dark);color:#fff;border:none;
-  cursor:pointer;font-family:inherit;font-size:0.68rem;font-weight:800;
-  letter-spacing:0.08em;text-transform:uppercase;
-  display:flex;flex-direction:column;align-items:center;gap:5px;
-  padding:18px 9px;line-height:1;
-  transition:background 0.2s;
+  position:fixed;top:60px;
+  height:34px;border-radius:0 0 12px 12px;
+  padding:0 16px;display:flex;align-items:center;gap:8px;
+  background:var(--accent-dark);color:#fff;border:none;
+  font:inherit;font-size:0.74rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;
+  cursor:pointer;z-index:220;
+  box-shadow:0 5px 18px rgba(40,133,78,0.22);
+  transition:background 0.2s,box-shadow 0.2s;
+  white-space:nowrap;
 }
-.drawer-tab:hover{background:var(--accent);}
-/* Left tab — news */
-.drawer-tab-left{
-  left:0;border-radius:0 10px 10px 0;
-  box-shadow:3px 0 14px rgba(0,0,0,0.2);
-  transition:left 0.3s cubic-bezier(.25,.8,.25,1),background 0.2s;
-}
-.drawer-tab-left.panel-open{left:290px;} /* matches news-panel width */
-/* Right tab — insights */
-.drawer-tab-right{
-  right:0;border-radius:10px 0 0 10px;
-  box-shadow:-3px 0 14px rgba(0,0,0,0.2);
-  transition:right 0.3s cubic-bezier(.25,.8,.25,1),background 0.2s;
-}
-.drawer-tab-right.panel-open{right:370px;} /* matches side-panel width */
-/* Arrow flips when panel opens */
-.drawer-tab-left .dtab-arrow{transition:transform 0.3s;display:block;font-size:0.9rem;}
-.drawer-tab-left.panel-open .dtab-arrow{transform:rotate(180deg);}
-.drawer-tab-right .dtab-arrow{transition:transform 0.3s;display:block;font-size:0.9rem;}
-.drawer-tab-right.panel-open .dtab-arrow{transform:rotate(180deg);}
-.dtab-icon{font-size:1.1rem;}
-.dtab-label{font-size:0.6rem;letter-spacing:0.1em;}
-@media(max-width:768px){
-  .drawer-tab-left.panel-open{left:min(290px,92vw);}
-  .drawer-tab-right.panel-open{right:min(370px,95vw);}
-  .dtab-label{display:none;}
-}
+.drawer-tab:hover{background:var(--accent);box-shadow:0 6px 20px rgba(40,133,78,0.3);}
+.drawer-tab-left{left:20px;}
+.drawer-tab-right{right:20px;}
+.dtab-arrow{font-size:0.7rem;transition:transform 0.25s ease;display:inline-block;}
+.drawer-tab.panel-open .dtab-arrow{transform:rotate(180deg);}
+.dtab-icon{font-size:1rem;}
+.dtab-label{}
+@media(max-width:600px){.dtab-label{display:none;}.drawer-tab{padding:0 11px;gap:5px;}}
 
-/* Side panel overlay */
-.side-panel-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:299;}
+/* Side panel overlay — light scrim for click-outside */
+.side-panel-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.15);z-index:299;}
 .side-panel-overlay.active{display:block;}
 
-/* Side Panel */
-.side-panel{position:fixed;right:-400px;top:0;bottom:0;width:370px;max-width:95vw;background:var(--card);z-index:300;overflow-y:auto;transition:right 0.3s ease;box-shadow:-4px 0 24px rgba(0,0,0,0.12);display:flex;flex-direction:column;}
-.side-panel.open{right:0;}
-.side-panel-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--accent-dark);color:#fff;font-weight:700;font-size:1rem;flex-shrink:0;}
+/* Farm Insights — TOP-RIGHT DROPDOWN */
+.side-panel{
+  position:fixed;right:20px;top:94px;
+  width:370px;max-width:calc(100vw - 32px);max-height:82vh;
+  background:var(--card);border:1px solid #dcebd8;border-top:none;
+  border-radius:0 0 14px 14px;
+  z-index:300;overflow-y:auto;
+  display:flex;flex-direction:column;
+  box-shadow:0 12px 40px rgba(0,0,0,0.14);
+  transform-origin:top center;
+  transform:scaleY(0);opacity:0;pointer-events:none;
+  transition:transform 0.28s cubic-bezier(.25,.8,.25,1),opacity 0.22s ease;
+}
+.side-panel.open{transform:scaleY(1);opacity:1;pointer-events:auto;}
+.side-panel-header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:var(--accent-dark);color:#fff;font-weight:700;font-size:0.92rem;flex-shrink:0;}
 .panel-close-btn{background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;line-height:1;padding:0 4px;}
 .panel-close-btn:hover{opacity:0.7;}
 
@@ -380,7 +374,7 @@ a:hover{text-decoration:underline;}
 
 /* Responsive updates for new features */
 @media(max-width:768px){
-  .side-panel{width:100%;right:-100%;}
+  .side-panel{width:calc(100vw - 32px);right:16px;}
   .market-kpi-row{grid-template-columns:1fr 1fr;}
   .community-header{flex-direction:column;align-items:flex-start;}
 }
@@ -428,8 +422,8 @@ a:hover{text-decoration:underline;}
 [data-theme="dark"] .chat-input-row textarea{color:var(--text);}
 [data-theme="dark"] .drop-zone{background:#141e14;border-color:#1e3a1e;}
 [data-theme="dark"] .form-group input,[data-theme="dark"] .form-group select,[data-theme="dark"] .form-group textarea{background:#141e14;border-color:#2a4a2a;color:var(--text);}
-[data-theme="dark"] .side-panel{background:#1a2e1a;}
-[data-theme="dark"] .news-panel{background:#1a2e1a;border-right-color:#2a4a2a;}
+[data-theme="dark"] .side-panel{background:#1a2e1a;border-color:#2a4a2a;}
+[data-theme="dark"] .news-panel{background:#1a2e1a;border-color:#2a4a2a;}
 [data-theme="dark"] .news-item{background:#141e14;border-color:#2a4a2a;}
 [data-theme="dark"] .forecast-day{background:#141e14;border-color:#2a4a2a;}
 [data-theme="dark"] .forecast-day.today{background:#1e3a1e;}
@@ -467,31 +461,35 @@ a:hover{text-decoration:underline;}
   88%{opacity:0.09;}
   100%{transform:translateY(-105vh) rotate(360deg);opacity:0;}
 }
-/* Ensure all content is above particles */
-.navbar,.page-wrap,.container,.side-panel,.side-panel-overlay,
-.news-panel,.news-overlay,.drawer-tab,.theme-toggle-btn,
-footer.footer{position:relative;z-index:1;}
+/* Ensure page content is above particles only */
+.page-wrap,.container,footer.footer{position:relative;z-index:1;}
+/* Fixed-positioned UI elements keep their own z-index */
+.navbar{position:relative;z-index:100;}
 
 /* ============================================================
-   NEWS TICKER — Left Side Panel + FAB Button
+   NEWS — Top-Left Dropdown Panel
    ============================================================ */
 .news-overlay{
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:149;
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.18);z-index:149;
 }
 .news-overlay.active{display:block;}
 
 .news-panel{
-  position:fixed;left:0;top:60px;bottom:0;width:290px;max-width:92vw;
-  background:var(--card);border-right:1px solid #dcebd8;
+  position:fixed;left:20px;top:94px;
+  width:300px;max-width:calc(100vw - 32px);max-height:72vh;
+  background:var(--card);border:1px solid #dcebd8;border-top:none;
+  border-radius:0 0 14px 14px;
   z-index:150;overflow:hidden;display:flex;flex-direction:column;
-  transform:translateX(-100%);transition:transform 0.3s cubic-bezier(.25,.8,.25,1);
-  box-shadow:4px 0 24px rgba(0,0,0,0.12);
+  box-shadow:0 12px 40px rgba(0,0,0,0.13);
+  transform-origin:top center;
+  transform:scaleY(0);opacity:0;pointer-events:none;
+  transition:transform 0.28s cubic-bezier(.25,.8,.25,1),opacity 0.22s ease;
 }
-.news-panel.open{transform:translateX(0);}
+.news-panel.open{transform:scaleY(1);opacity:1;pointer-events:auto;}
 .news-panel-header{
   display:flex;align-items:center;justify-content:space-between;
-  padding:14px 16px;background:var(--accent-dark);color:#fff;
-  font-weight:700;font-size:0.92rem;flex-shrink:0;
+  padding:10px 14px;background:var(--accent-dark);color:#fff;
+  font-weight:700;font-size:0.85rem;flex-shrink:0;letter-spacing:0.03em;
 }
 .news-close-btn{
   background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;
@@ -499,7 +497,8 @@ footer.footer{position:relative;z-index:1;}
 }
 .news-close-btn:hover{opacity:1;}
 .news-scroll{
-  flex:1;overflow:hidden;padding:10px 8px;scrollbar-width:thin;
+  flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 10px 14px;
+  scrollbar-width:thin;
 }
 .news-loading,.news-empty{
   text-align:center;padding:32px 16px;color:var(--muted);font-size:0.85rem;
