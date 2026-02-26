@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Crop Image</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="container">
+    <section class="card">
+      <h2>Upload Diseased Plant Image</h2>
+      <form action="{{ url_for('analyze') }}" method="post" enctype="multipart/form-data" class="form-grid">
+        <label>Plant Image*</label>
+        <input type="file" name="image" accept="image/*" required>
+
+        <label>Previously Used Chemicals (comma separated)</label>
+        <textarea name="chemicals" rows="2" placeholder="e.g., chlorpyrifos, imidacloprid"></textarea>
+
+        <label>Soil Type</label>
+        <select name="soil_type">
+          <option value="">Select</option>
+          <option value="Clay">Clay</option>
+          <option value="Sandy">Sandy</option>
+          <option value="Loamy">Loamy</option>
+          <option value="Silty">Silty</option>
+        </select>
+
+        <label>Watering Frequency (per week or text)</label>
+        <input type="text" name="watering_frequency" placeholder="e.g., 5 / daily / alternate days">
+
+        <label>Tilling Information</label>
+        <input type="text" name="tilling_info" placeholder="Optional">
+
+        <label>Soil Testing Information (Optional)</label>
+        <textarea name="soil_test_info" rows="3" placeholder="pH, NPK, EC, etc."></textarea>
+
+        <label>Preferred Language</label>
+        <select name="language">
+          {% for lang in languages %}
+            <option value="{{ lang }}">{{ lang }}</option>
+          {% endfor %}
+        </select>
+
+        <input type="hidden" name="latitude" id="latitude">
+        <input type="hidden" name="longitude" id="longitude">
+
+        <button type="button" class="btn-secondary" onclick="captureLocation()">Use My Location</button>
+        <button type="submit" class="btn">Analyze</button>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    function captureLocation() {
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported in this browser.');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          document.getElementById('latitude').value = position.coords.latitude;
+          document.getElementById('longitude').value = position.coords.longitude;
+          alert('Location captured successfully.');
+        },
+        () => alert('Unable to capture location. You can continue without it.')
+      );
+    }
+  </script>
+</body>
+</html>

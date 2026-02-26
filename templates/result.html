@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advisory Result</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="container">
+    <section class="card">
+      <h2>Analysis Result</h2>
+      {% if prediction_error %}
+        <p class="warn">Model warning: {{ prediction_error }}</p>
+      {% endif %}
+
+      <img src="{{ image_url }}" alt="Uploaded plant image" class="preview-img">
+
+      <div class="result-grid">
+        <p><strong>Plant Name:</strong> {{ plant_name }}</p>
+        <p><strong>Detected Disease:</strong> {{ disease_name }}</p>
+        <p><strong>Confidence %:</strong> {{ confidence }}</p>
+        <p><strong>Severity Level:</strong> {{ severity.category }} ({{ severity.percentage }}%)</p>
+        <p><strong>Environmental Risk:</strong> {{ weather.risk_level }} (Score: {{ weather.risk_score }})</p>
+      </div>
+
+      <h3>Possible Causes</h3>
+      <p>{{ advisory.causes }}</p>
+
+      <h3>Recommended Actions</h3>
+      <p>{{ advisory.actions }}</p>
+
+      <h3>Chemicals to Avoid</h3>
+      {% if advisory.chemicals_to_avoid %}
+        <ul>
+          {% for c in advisory.chemicals_to_avoid %}
+            <li>{{ c }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>None flagged from provided list.</p>
+      {% endif %}
+
+      <h3>Safer Alternatives</h3>
+      {% if advisory.alternatives %}
+        <ul>
+          {% for alt in advisory.alternatives %}
+            <li>{{ alt }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No alternatives required based on provided chemicals.</p>
+      {% endif %}
+
+      {% if nursery_link %}
+        <h3>Nearest Help (Severe Case)</h3>
+        <p><a href="{{ nursery_link }}" target="_blank">Find Nearby Nursery</a></p>
+        <p><a href="{{ consultant_link }}" target="_blank">Find Agriculture Consultant</a></p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h3>Follow-up Chat</h3>
+      <p>Ask your query in {{ language }}.</p>
+      <textarea id="chatQuestion" rows="3" placeholder="Type your question..."></textarea>
+      <button class="btn" onclick="sendChat()">Ask AI</button>
+      <div id="chatAnswer" class="chat-box"></div>
+    </section>
+  </main>
+
+  <script>
+    const advisoryContext = {{ advisory_context|tojson }};
+    const language = {{ language|tojson }};
+
+    async function sendChat() {
+      const question = document.getElementById('chatQuestion').value.trim();
+      const answerBox = document.getElementById('chatAnswer');
+      if (!question) {
+        answerBox.innerText = 'Please type a question.';
+        return;
+      }
+
+      answerBox.innerText = 'Thinking...';
+
+      try {
+        const response = await fetch('{{ url_for("chat") }}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question, context: advisoryContext, language })
+        });
+
+        const data = await response.json();
+        answerBox.innerText = data.answer || 'No response generated.';
+      } catch (error) {
+        answerBox.innerText = 'Unable to connect to chat service right now.';
+      }
+    }
+  </script>
+</body>
+</html>
