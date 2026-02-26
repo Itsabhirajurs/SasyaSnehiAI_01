@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>New Post — Community — Sashyasnehi AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<nav class="navbar">
+  <a class="nav-brand" href="{{ url_for('home') }}"><span class="leaf">&#127807;</span> Sashyasnehi AI</a>
+  <ul class="nav-links">
+    <li><a href="{{ url_for('home') }}">Home</a></li>
+    <li><a href="{{ url_for('community') }}" class="active">Community</a></li>
+    <li><a href="{{ url_for('market_page') }}">Market</a></li>
+    <li><a href="{{ url_for('upload') }}" class="btn-nav">Analyse Crop</a></li>
+  </ul>
+</nav>
+
+<div class="page-wrap" style="max-width:700px;">
+  <div class="page-header">
+    <h2>Ask the Community</h2>
+    <p>Describe your problem clearly so other farmers can help you.</p>
+  </div>
+
+  {% if error %}
+    <p class="warn" style="margin-bottom:16px;">{{ error }}</p>
+  {% endif %}
+
+  <form method="POST" class="form-new-post">
+    <div class="form-section">
+      <div class="form-section-title">Your Question</div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>Title *</label>
+        <input type="text" name="title" required maxlength="200" placeholder="e.g. Yellow spots on tomato leaves — what disease?" value="{{ request.args.get('disease','') if request.args.get('disease') else '' }}">
+      </div>
+      <div class="form-group">
+        <label>Description *</label>
+        <textarea name="body" required rows="6" placeholder="Describe the symptoms, when it started, what you've tried... be as detailed as possible."></textarea>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Crop Details</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Plant / Crop</label>
+          <select name="plant">
+            <option value="">Select plant...</option>
+            {% for p in ['Tomato','Potato','Pepper','Apple','Corn','Wheat','Rice','Mango','Banana','Cotton'] %}
+              <option {% if request.args.get('plant') == p %}selected{% endif %}>{{ p }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Suspected Disease</label>
+          <input type="text" name="disease" placeholder="e.g. Early Blight" value="{{ request.args.get('disease','') }}">
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:14px;">
+        <div class="form-group">
+          <label>State / Region</label>
+          <select name="state">
+            <option value="">Select state...</option>
+            {% for s in ['Karnataka','Maharashtra','Andhra Pradesh','Telangana','Punjab','Tamil Nadu','Gujarat','Uttar Pradesh','Bihar','Rajasthan','Madhya Pradesh','Kerala','West Bengal'] %}
+              <option {% if request.args.get('state') == s %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Location (optional)</label>
+          <input type="text" name="location" placeholder="e.g. Mysuru, Karnataka" value="{{ request.args.get('location','') }}">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">About You</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Your Name *</label>
+          <input type="text" name="author" required placeholder="Farmer name or username">
+        </div>
+        <div class="form-group">
+          <label>Tags (comma-separated)</label>
+          <input type="text" name="tags" placeholder="organic, irrigation, pesticide">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <a href="{{ url_for('community') }}" class="btn-secondary">Cancel</a>
+      <button class="btn" type="submit">Post Question</button>
+    </div>
+  </form>
+</div>
+
+<footer class="footer">Sashyasnehi AI &copy; 2025</footer>
+</body>
+</html>

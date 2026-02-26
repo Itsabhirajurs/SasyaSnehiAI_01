@@ -143,7 +143,7 @@
     }
 
     // Geolocation
-    function captureLocation() {
+    async function captureLocation() {
       const status = document.getElementById('location-status');
       if (!navigator.geolocation) {
         status.textContent = 'Geolocation not supported in this browser.';
@@ -151,10 +151,20 @@
       }
       status.textContent = 'Detecting location…';
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          document.getElementById('latitude').value = pos.coords.latitude;
-          document.getElementById('longitude').value = pos.coords.longitude;
-          status.textContent = `Location captured (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`;  
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          document.getElementById('latitude').value = lat;
+          document.getElementById('longitude').value = lon;
+          status.textContent = `✔ Coordinates captured (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+          // Try to get a human-readable address
+          try {
+            const r = await fetch(`/api/geocode?lat=${lat}&lon=${lon}`);
+            const d = await r.json();
+            if (d.address) {
+              status.innerHTML = `✔ Location: <strong>${d.address}</strong>`;
+            }
+          } catch(e) {}
         },
         () => { status.textContent = 'Unable to get location. Continuing without it.'; }
       );

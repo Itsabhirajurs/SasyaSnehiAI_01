@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Community Forum — Sashyasnehi AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<nav class="navbar">
+  <a class="nav-brand" href="{{ url_for('home') }}"><span class="leaf">&#127807;</span> Sashyasnehi AI</a>
+  <ul class="nav-links">
+    <li><a href="{{ url_for('home') }}">Home</a></li>
+    <li><a href="{{ url_for('community') }}" class="active">Community</a></li>
+    <li><a href="{{ url_for('market_page') }}">Market</a></li>
+    <li><a href="{{ url_for('about') }}">About</a></li>
+    <li><a href="{{ url_for('upload') }}" class="btn-nav">Analyse Crop</a></li>
+  </ul>
+</nav>
+
+<div class="page-wrap">
+  <div class="community-header">
+    <div>
+      <h2 style="font-size:1.6rem;font-weight:800;color:var(--accent-dark);margin-bottom:4px;">Farmer Community</h2>
+      <p style="color:var(--muted);font-size:0.9rem;">Discuss crop diseases, share experiences, and help each other.</p>
+    </div>
+    <a href="{{ url_for('community_new') }}" class="btn">+ Ask a Question</a>
+  </div>
+
+  <!-- Stats -->
+  <div class="comm-stats">
+    <div class="comm-stat">&#128221; <strong>{{ stats.total_posts }}</strong> Posts</div>
+    <div class="comm-stat">&#128172; <strong>{{ stats.total_replies }}</strong> Replies</div>
+    <div class="comm-stat">&#10003; <strong>{{ stats.solved }}</strong> Solved</div>
+    {% for crop,cnt in stats.top_crops %}
+      <div class="comm-stat">&#127807; <strong>{{ crop }}</strong> {{ cnt }} posts</div>
+    {% endfor %}
+  </div>
+
+  <!-- Filters -->
+  <form method="GET" class="comm-filters">
+    <input name="search" value="{{ request.args.get('search','') }}" placeholder="&#128269; Search discussions..." style="flex:1;min-width:200px;">
+    <select name="plant">
+      <option value="">All Plants</option>
+      {% for p in ['Tomato','Potato','Pepper','Apple','Corn','Wheat','Rice'] %}
+        <option {% if request.args.get('plant') == p %}selected{% endif %}>{{ p }}</option>
+      {% endfor %}
+    </select>
+    <select name="state">
+      <option value="">All States</option>
+      {% for s in ['Karnataka','Maharashtra','Andhra Pradesh','Telangana','Punjab','Tamil Nadu','Gujarat','Uttar Pradesh'] %}
+        <option {% if request.args.get('state') == s %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-sm" type="submit">Filter</button>
+  </form>
+
+  <!-- Thread list -->
+  {% if posts %}
+    <div class="thread-list">
+      {% for post in posts %}
+        <div class="thread-card">
+          <div class="thread-title">
+            <a href="{{ url_for('community_post', post_id=post.id) }}">{{ post.title }}</a>
+          </div>
+          <div class="thread-meta">
+            {% if post.plant %}<span class="thread-tag">{{ post.plant }}</span>{% endif %}
+            {% if post.disease %}<span class="thread-tag">{{ post.disease }}</span>{% endif %}
+            {% if post.state %}<span>&#128205; {{ post.state }}</span>{% endif %}
+            <span>by {{ post.author }} &bull; {{ post.time_ago }}</span>
+            <span>&#128065; {{ post.views }} views</span>
+            {% if post.status == 'solved' %}<span class="thread-solved">&#10003; Solved</span>{% endif %}
+          </div>
+          <div class="thread-actions">
+            <button class="vote-btn {% if post.upvotes > 0 %}voted{% endif %}" 
+                    onclick="votePost({{ post.id }}, this)">
+              &#9650; {{ post.upvotes }}
+            </button>
+            <a href="{{ url_for('community_post', post_id=post.id) }}" style="color:var(--muted);">
+              &#128172; {{ post.reply_count }} replies
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div style="text-align:center;padding:60px 20px;color:var(--muted);">
+      <p style="font-size:2rem;margin-bottom:12px;">&#127807;</p>
+      <p>No discussions yet. <a href="{{ url_for('community_new') }}">Start the first one!</a></p>
+    </div>
+  {% endif %}
+</div>
+
+<footer class="footer">Sashyasnehi AI &copy; 2025 &mdash; <a href="{{ url_for('home') }}">Home</a></footer>
+
+<script>
+const VISITOR_ID = 'visitor_' + Math.random().toString(36).slice(2,9);
+
+async function votePost(postId, btn) {
+  try {
+    const r = await fetch('/community/vote_post', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({post_id:postId, voter_id:VISITOR_ID})
+    });
+    const d = await r.json();
+    if (d.success) {
+      btn.textContent = '▲ ' + d.upvotes;
+      btn.classList.toggle('voted', d.voted);
+    }
+  } catch(e) {}
+}
+</script>
+</body>
+</html>

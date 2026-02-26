@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Market Analysis — Sashyasnehi AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<nav class="navbar">
+  <a class="nav-brand" href="{{ url_for('home') }}"><span class="leaf">&#127807;</span> Sashyasnehi AI</a>
+  <ul class="nav-links">
+    <li><a href="{{ url_for('home') }}">Home</a></li>
+    <li><a href="{{ url_for('community') }}">Community</a></li>
+    <li><a href="{{ url_for('market_page') }}" class="active">Market</a></li>
+    <li><a href="{{ url_for('about') }}">About</a></li>
+    <li><a href="{{ url_for('upload') }}" class="btn-nav">Analyse Crop</a></li>
+  </ul>
+</nav>
+
+<div class="page-wrap">
+
+  <!-- Hero + crop selector -->
+  <div class="market-hero">
+    <h2>Market Price Analysis</h2>
+    <p>Real-time market prices from AgMarknet (data.gov.in) with ML trend prediction.</p>
+    <form method="GET" style="display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap;">
+      <select name="crop" style="font:inherit;padding:9px 16px;border:1.5px solid rgba(255,255,255,0.4);border-radius:40px;background:rgba(255,255,255,0.15);color:#fff;font-size:0.9rem;min-width:160px;">
+        {% for c in ['Tomato','Potato','Pepper','Apple','Corn','Wheat','Rice','Onion','Mango','Cotton'] %}
+          <option style="color:#000;" {% if crop == c %}selected{% endif %}>{{ c }}</option>
+        {% endfor %}
+      </select>
+      <select name="state" style="font:inherit;padding:9px 16px;border:1.5px solid rgba(255,255,255,0.4);border-radius:40px;background:rgba(255,255,255,0.15);color:#fff;font-size:0.9rem;min-width:180px;">
+        <option style="color:#000;" value="">All States</option>
+        {% for s in ['Karnataka','Maharashtra','Andhra Pradesh','Telangana','Punjab','Tamil Nadu','Gujarat','Uttar Pradesh'] %}
+          <option style="color:#000;" {% if state == s %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn" type="submit" style="background:rgba(255,255,255,0.25);border:1.5px solid rgba(255,255,255,0.5);font-size:0.9rem;">Refresh</button>
+    </form>
+  </div>
+
+  {% if market %}
+    <!-- KPI Row -->
+    <div class="market-kpi-row">
+      <div class="kpi-card">
+        <span class="kpi-val">&#8377;{{ market.avg_price }}</span>
+        <span class="kpi-lbl">Avg Price / Quintal</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-val">&#8377;{{ market.min_price }}</span>
+        <span class="kpi-lbl">Min Price</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-val">&#8377;{{ market.max_price }}</span>
+        <span class="kpi-lbl">Max Price</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-val">&#8377;{{ market.median_price }}</span>
+        <span class="kpi-lbl">Median Price</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-val">
+          <span class="trend-badge {{ market.trend | lower }}">
+            {{ '↑' if market.trend == 'Rising' else ('↓' if market.trend == 'Falling' else '—') }}
+            {{ market.trend }}
+          </span>
+        </span>
+        <span class="kpi-lbl">Market Trend</span>
+      </div>
+      <div class="kpi-card" style="background:var(--accent-light);border-color:var(--accent);">
+        <span class="kpi-val" style="color:var(--accent-dark);">&#8377;{{ market.predicted_next_week }}</span>
+        <span class="kpi-lbl">ML Prediction (Next Week)</span>
+      </div>
+    </div>
+
+    {% if market.note %}
+      <p style="color:var(--muted);font-size:0.82rem;margin-bottom:16px;background:var(--bg2);padding:8px 14px;border-radius:8px;">
+        &#128161; {{ market.note }}
+      </p>
+    {% endif %}
+
+    <!-- Chart -->
+    {% if market.price_history %}
+      <div class="market-chart-wrap">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <h3 style="color:var(--accent-dark);margin:0;">{{ market.commodity }} — Price History</h3>
+          <span style="font-size:0.8rem;color:var(--muted);">{{ market.currency }} &bull; {{ market.last_updated }}</span>
+        </div>
+        <canvas id="priceHistoryChart" height="90"></canvas>
+      </div>
+    {% endif %}
+
+    <!-- Live market rates table -->
+    {% if market.markets %}
+      <div class="card">
+        <h3 style="margin-bottom:14px;">Live Market Rates</h3>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:0.88rem;">
+            <thead>
+              <tr style="background:var(--bg2);text-align:left;">
+                <th style="padding:10px 12px;border-radius:8px 0 0 8px;">Market</th>
+                <th style="padding:10px 12px;">District / State</th>
+                <th style="padding:10px 12px;">Min (&#8377;)</th>
+                <th style="padding:10px 12px;">Max (&#8377;)</th>
+                <th style="padding:10px 12px;border-radius:0 8px 8px 0;">Modal (&#8377;)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for m in market.markets %}
+                <tr style="border-bottom:1px solid var(--bg2);">
+                  <td style="padding:10px 12px;font-weight:600;">{{ m.market }}</td>
+                  <td style="padding:10px 12px;color:var(--muted);">{{ m.district }}, {{ m.state }}</td>
+                  <td style="padding:10px 12px;">{{ m.min_price }}</td>
+                  <td style="padding:10px 12px;">{{ m.max_price }}</td>
+                  <td style="padding:10px 12px;font-weight:700;color:var(--accent-dark);">{{ m.modal_price }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div style="text-align:center;padding:60px 20px;color:var(--muted);">
+      <p style="font-size:2rem;margin-bottom:16px;">&#128200;</p>
+      <p>Market data is currently unavailable.</p>
+      <p style="font-size:0.85rem;margin-top:8px;">Add <code>DATA_GOV_API_KEY</code> to your .env file</p>
+    </div>
+  {% endif %}
+</div>
+
+<footer class="footer">Sashyasnehi AI &copy; 2025 &mdash; Market data from <a href="https://data.gov.in" target="_blank">data.gov.in</a></footer>
+
+<script>
+(function() {
+  const canvas = document.getElementById('priceHistoryChart');
+  if (!canvas) return;
+  const history = {{ (market.price_history if market else [])|tojson }};
+  if (!history.length) return;
+  const labels = history.map((_, i) => 'Week -' + (history.length - i));
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Price (INR/Quintal)',
+        data: history,
+        borderColor: '#28854e',
+        backgroundColor: 'rgba(40,133,78,0.08)',
+        tension: 0.35,
+        pointRadius: 4,
+        pointBackgroundColor: '#28854e',
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => '₹' + ctx.parsed.y } }
+      },
+      scales: {
+        y: { ticks: { callback: v => '₹' + v } }
+      }
+    }
+  });
+})();
+</script>
+</body>
+</html>

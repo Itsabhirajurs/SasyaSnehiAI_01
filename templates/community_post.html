@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>{{ post.title }} — Community — Sashyasnehi AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<nav class="navbar">
+  <a class="nav-brand" href="{{ url_for('home') }}"><span class="leaf">&#127807;</span> Sashyasnehi AI</a>
+  <ul class="nav-links">
+    <li><a href="{{ url_for('home') }}">Home</a></li>
+    <li><a href="{{ url_for('community') }}" class="active">Community</a></li>
+    <li><a href="{{ url_for('market_page') }}">Market</a></li>
+    <li><a href="{{ url_for('upload') }}" class="btn-nav">Analyse Crop</a></li>
+  </ul>
+</nav>
+
+<div class="page-wrap">
+  <div style="margin-bottom:12px;">
+    <a href="{{ url_for('community') }}" style="color:var(--muted);font-size:0.9rem;">&larr; Back to Community</a>
+  </div>
+
+  <!-- Post -->
+  <div class="card">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div style="flex:1;">
+        <h2 style="font-size:1.3rem;margin-bottom:8px;">{{ post.title }}</h2>
+        <div class="thread-meta" style="margin-bottom:14px;">
+          {% if post.plant %}<span class="thread-tag">{{ post.plant }}</span>{% endif %}
+          {% if post.disease %}<span class="thread-tag">{{ post.disease }}</span>{% endif %}
+          {% if post.state %}<span>&#128205; {{ post.state }}</span>{% endif %}
+          <span>by <strong>{{ post.author }}</strong> &bull; {{ post.time_ago }}</span>
+          <span>&#128065; {{ post.views }} views</span>
+          {% if post.status == 'solved' %}<span class="thread-solved">&#10003; Solved</span>{% endif %}
+        </div>
+        <div style="font-size:0.95rem;line-height:1.75;color:var(--text);">{{ post.body | nl2br }}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;align-items:center;">
+      <button class="vote-btn" id="postVoteBtn" onclick="votePost({{ post.id }})">
+        &#9650; <span id="postUpvotes">{{ post.upvotes }}</span> Helpful
+      </button>
+      <a href="{{ url_for('community') }}?plant={{ post.plant }}" class="btn-secondary btn-sm">More {{ post.plant }} topics</a>
+    </div>
+  </div>
+
+  <!-- Replies -->
+  <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+    <h3 style="color:var(--accent-dark);font-size:1.1rem;">{{ replies|length }} Replies</h3>
+  </div>
+
+  {% for reply in replies %}
+    <div class="reply-card {% if reply.is_solution %}solution{% endif %}" id="reply-{{ reply.id }}">
+      {% if reply.is_solution %}
+        <div class="reply-solution-badge">&#10003; Accepted Solution</div>
+      {% endif %}
+      <div class="reply-body">{{ reply.body | nl2br }}</div>
+      <div class="reply-meta">
+        <strong>{{ reply.author }}</strong>
+        <span>{{ reply.time_ago }}</span>
+        <button class="vote-btn" onclick="voteReply({{ reply.id }}, this)">
+          &#9650; <span>{{ reply.upvotes }}</span>
+        </button>
+        {% if post.status != 'solved' %}
+          <button class="vote-btn" onclick="markSolution({{ reply.id }}, {{ post.id }})">
+            &#10003; Mark as Solution
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  {% else %}
+    <p style="color:var(--muted);margin-bottom:20px;">No replies yet. Be the first to help!</p>
+  {% endfor %}
+
+  <!-- Add Reply -->
+  <div class="card">
+    <h3 style="margin-bottom:14px;">Your Answer</h3>
+    <div class="form-group" style="margin-bottom:12px;">
+      <textarea id="replyBody" rows="5" placeholder="Share your knowledge or experience... What worked for you?" style="width:100%;font:inherit;padding:12px;border:1.5px solid #cde0cb;border-radius:9px;resize:vertical;outline:none;"></textarea>
+    </div>
+    <div class="form-row" style="margin-bottom:14px;">
+      <div class="form-group">
+        <label style="font-size:0.82rem;font-weight:600;color:var(--muted);">Your Name</label>
+        <input id="replyAuthor" type="text" placeholder="Farmer name" style="font:inherit;padding:9px 13px;border:1.5px solid #cde0cb;border-radius:9px;background:#fafcf9;outline:none;width:100%;">
+      </div>
+    </div>
+    <button class="btn" onclick="submitReply({{ post.id }})">Post Reply</button>
+  </div>
+</div>
+
+<footer class="footer">Sashyasnehi AI &copy; 2025</footer>
+
+<script>
+const VISITOR_ID = 'visitor_' + Math.random().toString(36).slice(2,9);
+
+async function votePost(postId) {
+  const btn = document.getElementById('postVoteBtn');
+  const span = document.getElementById('postUpvotes');
+  try {
+    const r = await fetch('/community/vote_post', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({post_id:postId, voter_id:VISITOR_ID})
+    });
+    const d = await r.json();
+    if (d.success) { span.textContent = d.upvotes; btn.classList.toggle('voted',d.voted); }
+  } catch(e) {}
+}
+
+async function voteReply(replyId, btn) {
+  try {
+    const r = await fetch('/community/vote_reply', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({reply_id:replyId, voter_id:VISITOR_ID})
+    });
+    const d = await r.json();
+    if (d.success) {
+      btn.querySelector('span').textContent = d.upvotes;
+      btn.classList.toggle('voted',d.voted);
+    }
+  } catch(e) {}
+}
+
+async function markSolution(replyId, postId) {
+  if (!confirm('Mark this reply as the accepted solution?')) return;
+  try {
+    const r = await fetch('/community/solve', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({reply_id:replyId, post_id:postId})
+    });
+    const d = await r.json();
+    if (d.success) location.reload();
+  } catch(e) {}
+}
+
+async function submitReply(postId) {
+  const body = document.getElementById('replyBody').value.trim();
+  const author = document.getElementById('replyAuthor').value.trim() || 'Anonymous Farmer';
+  if (!body) { alert('Please write a reply first.'); return; }
+  try {
+    const r = await fetch('/community/reply', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({post_id:postId, body, author})
+    });
+    const d = await r.json();
+    if (d.success) {
+      document.getElementById('replyBody').value = '';
+      location.reload();
+    } else { alert('Error posting reply.'); }
+  } catch(e) { alert('Error posting reply.'); }
+}
+</script>
+</body>
+</html>

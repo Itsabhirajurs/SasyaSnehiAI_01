@@ -3,28 +3,238 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Advisory Result — Sashyasnehi AI</title>
+  <title>Analysis Report — Sashyasnehi AI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
   <!-- NAV -->
   <nav class="navbar">
     <a class="nav-brand" href="{{ url_for('home') }}">
-      <span class="leaf">🌿</span> Sashyasnehi AI
+      <span class="leaf">&#127807;</span> Sashyasnehi AI
     </a>
     <ul class="nav-links">
       <li><a href="{{ url_for('home') }}">Home</a></li>
+      <li><a href="{{ url_for('community') }}">Community</a></li>
+      <li><a href="{{ url_for('market_page') }}?crop={{ plant_name }}">Market</a></li>
       <li><a href="{{ url_for('about') }}">About</a></li>
+      <li>
+        <select id="langSwitcher" class="lang-select" title="Switch language">
+          <option value="English" {% if language == 'English' %}selected{% endif %}>English</option>
+          <option value="Hindi" {% if language == 'Hindi' %}selected{% endif %}>Hindi</option>
+          <option value="Kannada" {% if language == 'Kannada' %}selected{% endif %}>Kannada</option>
+        </select>
+      </li>
       <li><a href="{{ url_for('upload') }}" class="btn-nav">New Analysis</a></li>
     </ul>
   </nav>
 
+  <!-- RIGHT PANEL TOGGLE BUTTON -->
+  <button class="panel-toggle-btn" id="panelToggleBtn" title="Open insight panels">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+    Insights
+  </button>
+
+  <!-- RIGHT SIDE PANEL OVERLAY -->
+  <div class="side-panel-overlay" id="panelOverlay" onclick="togglePanel(false)"></div>
+
+  <!-- RIGHT SIDE PANEL -->
+  <aside class="side-panel" id="sidePanel">
+    <div class="side-panel-header">
+      <span>Farm Insights</span>
+      <button onclick="togglePanel(false)" class="panel-close-btn">&times;</button>
+    </div>
+
+    <!-- Panel Tabs -->
+    <div class="panel-tabs">
+      <button class="ptab active" data-tab="tab-weather" onclick="switchTab(this,'tab-weather')">Weather</button>
+      <button class="ptab" data-tab="tab-market" onclick="switchTab(this,'tab-market')">Market</button>
+      <button class="ptab" data-tab="tab-schemes" onclick="switchTab(this,'tab-schemes')">Schemes</button>
+      <button class="ptab" data-tab="tab-shops" onclick="switchTab(this,'tab-shops')">Shops</button>
+    </div>
+
+    <!-- ── TAB: WEATHER FORECAST ─────────────────────────────── -->
+    <div class="panel-tab-content active" id="tab-weather">
+      {% if forecast.available %}
+        <div class="panel-section-title">
+          7-Day Forecast for <strong>{{ forecast.plant }}</strong>
+        </div>
+        <div class="forecast-strip">
+          {% for day in forecast.daily %}
+            <div class="forecast-day {% if loop.first %}today{% endif %}">
+              <div class="fday-name">{{ 'Today' if loop.first else day.day_name[:3] }}</div>
+              <img class="fday-icon" src="{{ day.icon }}" alt="{{ day.description }}">
+              <div class="fday-temp">{{ day.temp_max }}° / {{ day.temp_min }}°</div>
+              <div class="fday-humid">&#128167; {{ day.humidity }}%</div>
+              {% if day.rain_mm > 0 %}
+                <div class="fday-rain">&#127783; {{ day.rain_mm }}mm</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="panel-section-title" style="margin-top:16px;">Crop Advisory — {{ plant_name }}</div>
+        <div class="spray-window-badge">
+          Best spray window: <strong>{{ forecast.spray_window }}</strong>
+        </div>
+
+        {% for advice in forecast.crop_advice %}
+          <div class="advice-day-card risk-{{ advice.risk_level | lower }}">
+            <div class="adc-header">
+              <span class="adc-day">{{ 'Today' if loop.first else advice.day_name[:3] }}, {{ advice.short_date }}</span>
+              <span class="risk-mini risk-{{ advice.risk_level | lower }}">{{ advice.risk_level }}</span>
+              {% if advice.spray_ok %}
+                <span class="spray-ok-badge">Spray OK &bull; {{ advice.spray_time }}</span>
+              {% else %}
+                <span class="spray-no-badge">No Spray</span>
+              {% endif %}
+            </div>
+            {% for tip in advice.tips %}
+              <div class="adc-tip">{{ tip }}</div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+
+      {% else %}
+        <div class="panel-empty">
+          <p>Weather forecast unavailable.</p>
+          <p>Add <code>OPENWEATHER_API_KEY</code> and fetch location on the upload page.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- ── TAB: MARKET PRICES ────────────────────────────────── -->
+    <div class="panel-tab-content" id="tab-market">
+      {% if market %}
+        <div class="panel-section-title">{{ market.commodity }} Market Prices</div>
+        <div class="market-summary">
+          <div class="mkt-card">
+            <div class="mkt-val">&#8377;{{ market.avg_price }}</div>
+            <div class="mkt-lbl">Avg Price</div>
+          </div>
+          <div class="mkt-card">
+            <div class="mkt-val {% if market.trend == 'Rising' %}trend-up{% elif market.trend == 'Falling' %}trend-down{% endif %}">
+              {{ '&#8593;' if market.trend == 'Rising' else ('&#8595;' if market.trend == 'Falling' else '&#8212;') }}
+              {{ market.trend }}
+            </div>
+            <div class="mkt-lbl">Trend</div>
+          </div>
+          <div class="mkt-card">
+            <div class="mkt-val">&#8377;{{ market.predicted_next_week }}</div>
+            <div class="mkt-lbl">Predicted (next wk)</div>
+          </div>
+        </div>
+
+        <div style="font-size:0.78rem;color:var(--muted);margin:4px 0 12px;">
+          {{ market.currency }} &bull; Updated: {{ market.last_updated }}
+          {% if market.note %}&bull; {{ market.note }}{% endif %}
+        </div>
+
+        {% if market.price_history %}
+          <canvas id="priceChart" height="120"></canvas>
+        {% endif %}
+
+        {% if market.markets %}
+          <div class="panel-section-title" style="margin-top:16px;">Live Market Rates</div>
+          <div class="market-table">
+            {% for m in market.markets %}
+              <div class="mkt-row">
+                <div>
+                  <strong>{{ m.market }}</strong>
+                  <div style="font-size:0.78rem;color:var(--muted)">{{ m.district }}, {{ m.state }}</div>
+                  <div style="font-size:0.78rem;color:var(--muted)">{{ m.date }}</div>
+                </div>
+                <div class="mkt-price-col">
+                  <span class="mkt-modal">&#8377;{{ m.modal_price }}</span>
+                  <span class="mkt-range">{{ m.min_price }} - {{ m.max_price }}</span>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <a href="{{ url_for('market_page') }}?crop={{ plant_name }}" class="btn btn-sm" style="margin-top:12px;display:block;text-align:center;">
+          Full Market Analysis
+        </a>
+      {% else %}
+        <div class="panel-empty">Market data unavailable.</div>
+      {% endif %}
+    </div>
+
+    <!-- ── TAB: GOVT SCHEMES ────────────────────────────────── -->
+    <div class="panel-tab-content" id="tab-schemes">
+      {% if schemes %}
+        <div class="panel-section-title">
+          Farmer Schemes
+          {% if location_info and location_info.state %}
+            — {{ location_info.state }}
+          {% endif %}
+        </div>
+        {% for scheme in schemes.schemes %}
+          <div class="scheme-card">
+            <div class="scheme-header">
+              <span class="scheme-cat">{{ scheme.category }}</span>
+              <span class="scheme-name">{{ scheme.name }}</span>
+            </div>
+            <p class="scheme-benefit">{{ scheme.benefit }}</p>
+            <div class="scheme-footer">
+              <span class="scheme-elig">{{ scheme.eligibility[:80] }}{% if scheme.eligibility|length > 80 %}…{% endif %}</span>
+              <a href="{{ scheme.link }}" target="_blank" class="scheme-link">Apply &rarr;</a>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="panel-empty">Govt schemes data unavailable.</div>
+      {% endif %}
+    </div>
+
+    <!-- ── TAB: NEARBY SHOPS ────────────────────────────────── -->
+    <div class="panel-tab-content" id="tab-shops">
+      {% if nearby_shops %}
+        <div class="panel-section-title">Nearby Agri Shops</div>
+        {% for shop in nearby_shops %}
+          <div class="shop-card">
+            <div class="shop-name">{{ shop.name }}</div>
+            <div class="shop-addr">{{ shop.address }}</div>
+            <div class="shop-meta">
+              {% if shop.rating %}<span class="shop-rating">&#9733; {{ shop.rating }}</span>{% endif %}
+              <span class="shop-dist">{{ shop.distance_approx }} km away</span>
+              {% if shop.open_now is not none %}
+                <span class="shop-status {{ 'open' if shop.open_now else 'closed' }}">
+                  {{ 'Open' if shop.open_now else 'Closed' }}
+                </span>
+              {% endif %}
+            </div>
+            <a href="{{ shop.maps_url }}" target="_blank" class="btn btn-sm" style="margin-top:8px;">
+              View on Maps
+            </a>
+          </div>
+        {% endfor %}
+      {% elif latitude %}
+        <div class="panel-empty">
+          <p>To find nearby shops, add a <code>GOOGLE_MAPS_API_KEY</code> to your .env file.</p>
+        </div>
+      {% else %}
+        <div class="panel-empty">
+          <p>Enable location on the upload page to find nearby agri shops.</p>
+        </div>
+      {% endif %}
+    </div>
+
+  </aside>
+
+  <!-- MAIN CONTENT -->
   <div class="page-wrap">
 
     <div class="page-header">
       <h2>Analysis Report</h2>
-      <p>Full AI advisory based on your uploaded image and farm details.</p>
+      <p>
+        Full AI advisory based on your uploaded image and farm details.
+        {% if location_info and location_info.address %}
+          &nbsp; <span class="location-badge">&#128205; {{ location_info.address }}</span>
+        {% endif %}
+      </p>
     </div>
 
     <!-- NOTICES -->
@@ -32,7 +242,7 @@
       <p class="warn" style="margin-bottom:12px;">Warning: {{ prediction_error }}</p>
     {% endif %}
     {% if not llm_available %}
-      <p class="info" style="margin-bottom:12px;">Gemini AI is not configured. Advisory shown in rule-based mode. Add <code>GEMINI_API_KEY</code> in .env for multilingual AI chat.</p>
+      <p class="info" style="margin-bottom:12px;">Gemini AI not configured. Add <code>GEMINI_API_KEY</code> in .env for AI chat.</p>
     {% endif %}
 
     <!-- DETECTION CARD -->
@@ -83,61 +293,48 @@
       {% if weather.humidity is not none or weather.temperature is not none %}
         <div class="weather-grid">
           <div class="weather-cell">
-            <div class="w-val">{{ weather.humidity if weather.humidity is not none else '—' }}%</div>
+            <div class="w-val">{{ weather.humidity if weather.humidity is not none else '&mdash;' }}%</div>
             <div class="w-lbl">Humidity</div>
           </div>
           <div class="weather-cell">
-            <div class="w-val">{{ weather.temperature if weather.temperature is not none else '—' }}°C</div>
+            <div class="w-val">{{ weather.temperature if weather.temperature is not none else '&mdash;' }}°C</div>
             <div class="w-lbl">Temperature</div>
           </div>
           <div class="weather-cell">
-            <div class="w-val">{{ weather.rain_probability if weather.rain_probability is not none else '—' }}%</div>
+            <div class="w-val">{{ (weather.rain_probability | string) if weather.rain_probability is not none else '&mdash;' }}%</div>
             <div class="w-lbl">Rain Probability</div>
           </div>
         </div>
       {% else %}
-        <p style="color:var(--muted);font-size:0.9rem;">Weather data unavailable — add OPENWEATHER_API_KEY and location for live scoring.</p>
+        <p style="color:var(--muted);font-size:0.9rem;">Weather data unavailable — add OPENWEATHER_API_KEY and fetch location for live scoring.</p>
       {% endif %}
     </div>
 
     <!-- ADVISORY -->
     <div class="card">
       <h2>Crop Advisory</h2>
-
       <div class="advisory-section">
         <h3>Summary</h3>
         <p>{{ advisory.summary }}</p>
       </div>
-
       <div class="advisory-section">
         <h3>Possible Causes</h3>
         <p>{{ advisory.causes }}</p>
       </div>
-
       <div class="advisory-section">
         <h3>Recommended Actions</h3>
         <p>{{ advisory.actions }}</p>
       </div>
-
       {% if advisory.chemicals_to_avoid %}
         <div class="advisory-section">
           <h3>Chemicals to Avoid</h3>
-          <ul>
-            {% for c in advisory.chemicals_to_avoid %}
-              <li>{{ c }}</li>
-            {% endfor %}
-          </ul>
+          <ul>{% for c in advisory.chemicals_to_avoid %}<li>{{ c }}</li>{% endfor %}</ul>
         </div>
       {% endif %}
-
       {% if advisory.alternatives %}
         <div class="advisory-section">
           <h3>Safer Alternatives</h3>
-          <ul>
-            {% for alt in advisory.alternatives %}
-              <li>{{ alt }}</li>
-            {% endfor %}
-          </ul>
+          <ul>{% for alt in advisory.alternatives %}<li>{{ alt }}</li>{% endfor %}</ul>
         </div>
       {% endif %}
     </div>
@@ -169,18 +366,44 @@
       </div>
     {% endif %}
 
+    <!-- COMMUNITY: Similar Issues -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <h2 style="margin:0;">Similar Issues in Community</h2>
+        <a href="{{ url_for('community_new') }}?plant={{ plant_name }}&disease={{ disease_name }}&location={{ location_info.address if location_info else '' }}&state={{ location_info.state if location_info else '' }}" class="btn btn-sm">Post This Issue</a>
+      </div>
+      {% if similar_posts %}
+        <div class="community-preview">
+          {% for post in similar_posts %}
+            <a href="{{ url_for('community_post', post_id=post.id) }}" class="comm-preview-card">
+              <div class="cpc-title">{{ post.title }}</div>
+              <div class="cpc-meta">
+                <span class="cpc-crop">{{ post.plant }}</span>
+                <span class="cpc-time">{{ post.time_ago }}</span>
+                <span class="cpc-replies">{{ post.reply_count }} replies</span>
+                {% if post.status == 'solved' %}<span class="cpc-solved">Solved</span>{% endif %}
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+        <a href="{{ url_for('community') }}?plant={{ plant_name }}" class="btn-secondary btn-sm" style="margin-top:12px;display:inline-block;">View All Discussions</a>
+      {% else %}
+        <p style="color:var(--muted);font-size:0.9rem;">No community discussions yet for this crop/disease. Be the first to post!</p>
+      {% endif %}
+    </div>
+
     <!-- AI CHAT -->
     <div class="card">
       <h2>Ask AI About Your Crop</h2>
       <p style="color:var(--muted);margin-bottom:16px;font-size:0.9rem;">
-        Have a full conversation with Gemini AI about your crop in <strong>{{ language }}</strong>. Ask follow-up questions — it remembers the whole chat.
+        Conversation with Gemini AI in <strong id="currentLang">{{ language }}</strong>. Ask follow-up questions — it remembers the whole chat.
       </p>
 
       <div class="chat-thread" id="chatThread"></div>
 
       <div class="chat-input-row">
         <textarea id="chatInput" placeholder="Ask anything... e.g. How often should I spray? Any organic alternatives?"></textarea>
-        <button class="chat-send-btn" id="chatSendBtn" type="button" title="Send (Ctrl+Enter)">Send</button>
+        <button class="chat-send-btn" id="chatSendBtn" type="button" title="Send (Enter)">Send</button>
       </div>
     </div>
 
@@ -190,18 +413,77 @@
       <a class="btn" href="{{ url_for('home') }}">Home</a>
     </div>
 
-  </div><!-- /page-wrap -->
+  </div>
 
   <footer class="footer">
-    Sashyasnehi AI &copy; 2025 &nbsp;&middot;&nbsp; <a href="{{ url_for('about') }}">About</a>
+    Sashyasnehi AI &copy; 2025 &nbsp;&middot;&nbsp;
+    <a href="{{ url_for('community') }}">Community</a> &nbsp;&middot;&nbsp;
+    <a href="{{ url_for('about') }}">About</a>
   </footer>
 
   <script>
+    // Advisory context & language
     const advisoryContext = {{ advisory_context|tojson }};
-    const language = {{ language|tojson }};
-
+    let language = {{ language|tojson }};
     let conversationHistory = [];
 
+    // ── Language Switcher ────────────────────────────────────────────
+    document.getElementById('langSwitcher').addEventListener('change', function() {
+      language = this.value;
+      document.getElementById('currentLang').textContent = language;
+    });
+
+    // ── Side Panel ───────────────────────────────────────────────────
+    function togglePanel(open) {
+      const panel = document.getElementById('sidePanel');
+      const overlay = document.getElementById('panelOverlay');
+      const btn = document.getElementById('panelToggleBtn');
+      const isOpen = open !== undefined ? open : !panel.classList.contains('open');
+      panel.classList.toggle('open', isOpen);
+      overlay.classList.toggle('active', isOpen);
+      btn.classList.toggle('active', isOpen);
+    }
+    document.getElementById('panelToggleBtn').addEventListener('click', () => togglePanel());
+
+    function switchTab(el, tabId) {
+      document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel-tab-content').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    // ── Market Price Chart ───────────────────────────────────────────
+    (function() {
+      const canvas = document.getElementById('priceChart');
+      if (!canvas) return;
+      const history = {{ (market.price_history if market else [])|tojson }};
+      if (!history.length) return;
+      new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: history.map((_, i) => `T-${history.length - i}`),
+          datasets: [{
+            label: 'Price (INR/Quintal)',
+            data: history,
+            borderColor: '#2d6a4f',
+            backgroundColor: 'rgba(45,106,79,0.08)',
+            tension: 0.4,
+            pointRadius: 3,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { ticks: { font: { size: 11 } } },
+            x: { ticks: { display: false } }
+          }
+        }
+      });
+    })();
+
+    // ── Chat ─────────────────────────────────────────────────────────
     const thread  = document.getElementById('chatThread');
     const input   = document.getElementById('chatInput');
     const sendBtn = document.getElementById('chatSendBtn');
@@ -211,7 +493,7 @@
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/^[-*•]\s+(.+)$/gm, '<li>$1</li>')
+        .replace(/^[-*\u2022]\s+(.+)$/gm, '<li>$1</li>')
         .replace(/(<li>[\s\S]*?<\/li>\n?)+/g, m => '<ul>' + m + '</ul>')
         .replace(/\n/g, '<br>');
     }
@@ -248,38 +530,30 @@
     async function sendChat() {
       const question = input.value.trim();
       if (!question) return;
-
       input.value = '';
       input.style.height = 'auto';
       sendBtn.disabled = true;
-
       appendBubble('user', renderMarkdown(question));
       conversationHistory.push({ role: 'user', content: question });
       showTyping();
-
       try {
         const response = await fetch('{{ url_for("chat") }}', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            question: question,
-            context: advisoryContext,
-            language: language,
+            question, context: advisoryContext, language,
             history: conversationHistory.slice(0, -1)
           })
         });
         const data = await response.json();
         hideTyping();
-        const answer = data.answer || 'No response generated.';
+        const answer = data.answer || 'No response.';
         conversationHistory.push({ role: 'ai', content: answer });
         appendBubble('ai', renderMarkdown(answer));
       } catch (err) {
         hideTyping();
-        const errMsg = 'Unable to reach AI service. Please check your connection.';
-        appendBubble('ai', errMsg);
-        conversationHistory.push({ role: 'ai', content: errMsg });
+        appendBubble('ai', 'Unable to reach AI service.');
       }
-
       sendBtn.disabled = false;
       input.focus();
     }
@@ -288,17 +562,10 @@
       this.style.height = 'auto';
       this.style.height = Math.min(this.scrollHeight, 120) + 'px';
     });
-
     input.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        if (!sendBtn.disabled) sendChat();
-      }
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!sendBtn.disabled) sendChat(); }
     });
-
-    sendBtn.addEventListener('click', function() {
-      if (!sendBtn.disabled) sendChat();
-    });
+    sendBtn.addEventListener('click', () => { if (!sendBtn.disabled) sendChat(); });
   </script>
 </body>
 </html>
