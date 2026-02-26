@@ -172,14 +172,14 @@
     <div class="card">
       <h2>💬 Ask AI About Your Crop</h2>
       <p style="color:var(--muted);margin-bottom:16px;font-size:0.9rem;">
-        Ask a follow-up question in <strong>{{ language }}</strong> and Gemini AI will answer with your crop context.
+        Have a full conversation with Gemini AI about your crop in <strong>{{ language }}</strong>. Ask follow-up questions — it remembers the whole chat.
       </p>
       <div class="chat-container">
-        <textarea id="chatQuestion" placeholder="e.g., How often should I spray? What organic treatment can I use?"></textarea>
-        <div>
-          <button class="btn" onclick="sendChat()">🤖 Ask AI</button>
+        <div class="chat-thread" id="chatThread"></div>
+        <div class="chat-input-row">
+          <textarea id="chatInput" placeholder="Ask anything… e.g. How often should I spray? Any organic alternatives?" rows="1"></textarea>
+          <button class="chat-send-btn" id="chatSendBtn" title="Send (Ctrl+Enter)">➤</button>
         </div>
-        <div id="chatAnswer" class="chat-box" style="display:none;"></div>
       </div>
     </div>
 
@@ -199,29 +199,114 @@
     const advisoryContext = {{ advisory_context|tojson }};
     const language = {{ language|tojson }};
 
-    async function sendChat() {
-      const question = document.getElementById('chatQuestion').value.trim();
-      const answerBox = document.getElementById('chatAnswer');
-      if (!question) { answerBox.style.display = 'block'; answerBox.innerText = 'Please type a question first.'; return; }
+    // ── Conversation state ──────────────────────────────────────────────────
+    let conversationHistory = [];   // [{role:"user"|"ai", content:"..."}]
 
-      answerBox.style.display = 'block';
-      answerBox.style.opacity = '0.6';
-      answerBox.innerText = '⏳ Thinking…';
+    const thread   = document.getElementById('chatThread');
+    const input    = document.getElementById('chatInput');
+    const sendBtn  = document.getElementById('chatSendBtn');
+
+    // ── Markdown-lite renderer (bold + bullets) ─────────────────────────────
+    function renderMarkdown(text) {
+      return text
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/^[-*•]\s+(.+)$/gm, '<li>$1</li>')
+        .replace(/(<li>.*<\/li>(\n|$))+/g, m => `<ul>${m}</ul>`)
+        .replace(/\n/g, '<br>');
+    }
+
+    // ── Add a message bubble to the thread ─────────────────────────────────
+    function appendBubble(role, htmlContent) {
+      const isUser = role === 'user';
+      const row = document.createElement('div');
+      row.className = `chat-msg ${role}`;
+      row.innerHTML = `
+        <div class="chat-avatar">${isUser ? '🧑‍🌾' : '🤖'}</div>
+        <div class="chat-bubble">${htmlContent}</div>`;
+      thread.appendChild(row);
+      thread.scrollTop = thread.scrollHeight;
+      return row;
+    }
+
+    // ── Typing indicator ────────────────────────────────────────────────────
+    function showTyping() {
+      const row = document.createElement('div');
+      row.className = 'chat-msg ai';
+      row.id = 'typingRow';
+      row.innerHTML = `
+        <div class="chat-avatar">🤖</div>
+        <div class="chat-bubble typing-bubble">
+          <span class="typing-dot"></span>
+          <span class="typing-dot"></span>
+          <span class="typing-dot"></span>
+        </div>`;
+      thread.appendChild(row);
+      thread.scrollTop = thread.scrollHeight;
+    }
+
+    function hideTyping() {
+      const el = document.getElementById('typingRow');
+      if (el) el.remove();
+    }
+
+    // ── Send message ────────────────────────────────────────────────────────
+    async function sendChat() {
+      const question = input.value.trim();
+      if (!question) return;
+
+      input.value = '';
+      input.style.height = 'auto';
+      sendBtn.disabled = true;
+
+      // Show user bubble immediately
+      appendBubble('user', renderMarkdown(question));
+      conversationHistory.push({ role: 'user', content: question });
+
+      showTyping();
 
       try {
         const response = await fetch('{{ url_for("chat") }}', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question, context: advisoryContext, language })
+          body: JSON.stringify({
+            question,
+            context: advisoryContext,
+            language,
+            history: conversationHistory.slice(0, -1)   // all except the current user msg
+          })
         });
         const data = await response.json();
-        answerBox.style.opacity = '1';
-        answerBox.innerText = data.answer || 'No response generated.';
+        hideTyping();
+        const answer = data.answer || 'No response generated.';
+        conversationHistory.push({ role: 'ai', content: answer });
+        appendBubble('ai', renderMarkdown(answer));
       } catch (err) {
-        answerBox.style.opacity = '1';
-        answerBox.innerText = '❌ Unable to reach AI service. Please try again.';
+        hideTyping();
+        const errMsg = '❌ Unable to reach AI service. Please check your connection.';
+        appendBubble('ai', errMsg);
+        conversationHistory.push({ role: 'ai', content: errMsg });
       }
+
+      sendBtn.disabled = false;
+      input.focus();
     }
+
+    // ── Auto-grow textarea ──────────────────────────────────────────────────
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+    });
+
+    // ── Ctrl+Enter or Enter (without Shift) to send ─────────────────────────
+    input.addEventListener('keydown', e => {
+      if ((e.key === 'Enter' && e.ctrlKey) || (e.key === 'Enter' && !e.shiftKey && !e.metaKey)) {
+        e.preventDefault();
+        if (!sendBtn.disabled) sendChat();
+      }
+    });
+
+    sendBtn.addEventListener('click', () => { if (!sendBtn.disabled) sendChat(); });
   </script>
 </body>
 </html>

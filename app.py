@@ -187,11 +187,12 @@ def chat():
     question = str(payload.get("question", "")).strip()
     context = payload.get("context", {})
     language = str(payload.get("language", "English"))
+    history: list[dict] = payload.get("history", [])
 
     if not question:
         return jsonify({"answer": "Please ask a question."}), 400
 
-    answer = llm_service.chat_with_context(context, question)
+    answer = llm_service.chat_with_history(context, question, history=history)
     if language != "English":
         answer = llm_service.translate_text(answer, language)
 

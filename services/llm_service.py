@@ -117,14 +117,69 @@ class LLMService:
             "For multilingual conversational responses, add GEMINI_API_KEY in .env and restart the app."
         )
 
-    def chat_with_context(self, context: Any, user_question: str) -> str:
+    def _build_system_ctx(self, context: Any) -> str:
+        """Serialise the advisory context into a compact system preamble."""
+        if not isinstance(context, dict):
+            return str(context)
+        disease = context.get('disease', 'Unknown')
+        plant   = context.get('plant', 'Unknown plant')
+        sev     = context.get('severity', {}).get('category', 'unknown')
+        sev_pct = context.get('severity', {}).get('percentage', 0)
+        risk    = context.get('weather', {}).get('risk_level', 'unknown')
+        actions = context.get('advisory', {}).get('actions', '')
+        summary = context.get('advisory', {}).get('summary', '')
+        return (
+            f"Crop situation\n"
+            f"  Plant: {plant}\n"
+            f"  Disease detected: {disease}\n"
+            f"  Severity: {sev} ({sev_pct:.0f}% of leaf affected)\n"
+            f"  Environmental risk: {risk}\n"
+            f"  Summary: {summary}\n"
+            f"  Recommended actions: {actions}\n"
+        )
+
+    def chat_with_history(
+        self,
+        context: Any,
+        user_question: str,
+        history: list[dict] | None = None,
+    ) -> str:
+        """Multi-turn conversational chat keeping the full session history."""
         if not self.is_available():
             return self._fallback_chat(context, user_question)
-        prompt = (
+
+        system_ctx = self._build_system_ctx(context)
+        system_instruction = (
             f"{SYSTEM_PROMPT}\n"
-            "Use the context and answer the farmer question with practical steps."
-            "If a language is requested in context, answer in that language.\n\n"
-            f"Context:\n{context}\n\n"
-            f"Farmer Question:\n{user_question}"
+            "You are a specialist in plant diseases, soil health, and sustainable farming. "
+            "You have already analysed this farmer's crop and will now answer follow-up questions. "
+            "Keep answers practical, concise, and friendly. Use markdown-like formatting "
+            "(**bold**, bullet points) where helpful.\n\n"
+            f"— Current crop context —\n{system_ctx}"
         )
-        return self._generate(prompt)
+
+        # Convert frontend history [{role, content}, ...] to Gemini format
+        gemini_history: list[dict] = []
+        for msg in (history or []):
+            role = "user" if msg.get("role") == "user" else "model"
+            gemini_history.append({"role": role, "parts": [msg.get("content", "")]})
+
+        while self.client is not None:
+            try:
+                # Re-create model with system instruction for multi-turn
+                model = genai.GenerativeModel(
+                    self.model_candidates[self.current_model_index],
+                    system_instruction=system_instruction,
+                )
+                chat_session = model.start_chat(history=gemini_history)
+                response = chat_session.send_message(user_question)
+                return (response.text or "").strip()
+            except Exception:
+                self.current_model_index += 1
+                self.client = self._new_client_from_candidates()
+
+        return self._fallback_chat(context, user_question)
+
+    def chat_with_context(self, context: Any, user_question: str) -> str:
+        """Single-turn convenience wrapper (kept for backward compat)."""
+        return self.chat_with_history(context, user_question, history=[])
