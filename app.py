@@ -112,6 +112,11 @@ def _extract_token() -> str:
     return ""
 
 
+@app.route("/login")
+def login():
+    return render_template("login.html")
+
+
 @app.route("/")
 def home():
     return render_template("home.html")

@@ -31,29 +31,13 @@
     </li>
     <li><button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle dark mode">&#127769;</button></li>
     <li><a href="{{ url_for('upload') }}" class="btn-nav" data-i18n="nav.analyze">Analyse Crop</a></li>
+    <li id="navUserControls" style="display:none;align-items:center;gap:6px;"></li>
   </ul>
 </nav>
 
 <div class="page-wrap">
   <div style="margin-bottom:12px;">
     <a href="{{ url_for('community') }}" style="color:var(--muted);font-size:0.9rem;">&larr; Back to Community</a>
-  </div>
-
-  <!-- Auth bar -->
-  <div class="card" id="authCard" style="margin-bottom:12px;">
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;">
-      <div id="authStatus" style="font-weight:600;">Checking sign-in...</div>
-      <div id="authSignedOut" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <input id="authEmail" type="email" placeholder="Email" style="min-width:200px;">
-        <input id="authPassword" type="password" placeholder="Password (min 6)" style="min-width:160px;">
-        <button class="btn btn-sm" onclick="authSignup()">Sign up</button>
-        <button class="btn btn-outline btn-sm" onclick="authLogin()">Sign in</button>
-      </div>
-      <div id="authSignedIn" style="display:none;gap:8px;align-items:center;flex-wrap:wrap;">
-        <span id="authUserEmail" style="color:var(--muted);"></span>
-        <button class="btn btn-outline btn-sm" onclick="authLogout()">Sign out</button>
-      </div>
-    </div>
   </div>
 
   <!-- Post -->

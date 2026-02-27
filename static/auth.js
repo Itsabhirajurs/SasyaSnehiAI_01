@@ -1,7 +1,13 @@
 /**
  * Sashyasnehi AI – Supabase Auth (client-side)
- * Loaded as ES-module on community pages.
- * Uses the @supabase/supabase-js CDN bundle.
+ * Loaded as ES-module on ALL pages.
+ *
+ * Behaviour:
+ *  - On every page (except /login) → check session.
+ *    If NOT signed in → redirect to /login?next=<current path>
+ *  - On /login page → this script is NOT loaded (login.html has its own inline auth).
+ *  - Navbar shows user email + Sign-out button when signed in.
+ *  - Community helpers (vote, reply, etc.) are still exposed globally.
  */
 
 /* ── Supabase client ─────────────────────────────────────────────────────── */
@@ -20,8 +26,6 @@ function sb() {
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
 function $(id) { return document.getElementById(id); }
-function show(el) { if (el) el.style.display = "flex"; }
-function hide(el) { if (el) el.style.display = "none"; }
 
 /** Get current access token (JWT). Returns "" when signed-out. */
 async function getToken() {
@@ -39,81 +43,50 @@ async function getUser() {
   return data?.user || null;
 }
 
-/* ── UI state ─────────────────────────────────────────────────────────────── */
-async function refreshUI() {
+/* ── Auth gate — redirect to /login if not signed in ─────────────────────── */
+async function authGate() {
+  const client = sb();
+  if (!client) return;  // no Supabase config — skip gating
+
+  const { data } = await client.auth.getSession();
+  if (!data?.session) {
+    const next = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.replace("/login?next=" + next);
+  }
+}
+
+/* ── Navbar user controls ─────────────────────────────────────────────────── */
+async function refreshNavbar() {
   const user = await getUser();
-  const statusEl   = $("authStatus");
-  const signedOut  = $("authSignedOut");
-  const signedIn   = $("authSignedIn");
-  const emailEl    = $("authUserEmail");
-  const profileEd  = $("profileEditor");
+  const navUserEl = $("navUserControls");
+  if (!navUserEl) return;
 
   if (user) {
-    if (statusEl) statusEl.textContent = "Signed in \u2713";
-    hide(signedOut);
-    show(signedIn);
-    if (emailEl) emailEl.textContent = user.email || user.phone || user.id;
-    // Auto-fill hidden token fields on the page
+    const displayName = user.user_metadata?.full_name || user.email || user.phone || "User";
+    navUserEl.innerHTML =
+      `<span style="color:var(--muted);font-size:0.85rem;font-weight:600;margin-right:6px;">` +
+      `${displayName}</span>` +
+      `<button class="btn-nav" onclick="authLogout()" style="font-size:0.82rem;padding:6px 14px;">Sign out</button>`;
+    navUserEl.style.display = "flex";
+  } else {
+    navUserEl.innerHTML =
+      `<a href="/login" class="btn-nav" style="font-size:0.82rem;padding:6px 14px;">Sign in</a>`;
+    navUserEl.style.display = "flex";
+  }
+
+  // Auto-fill hidden supabase_token inputs (community_new form)
+  if (user) {
     document.querySelectorAll("input[name='supabase_token']").forEach(el => {
       getToken().then(t => el.value = t);
     });
-  } else {
-    if (statusEl) statusEl.textContent = "Sign in to post, reply & vote";
-    show(signedOut);
-    hide(signedIn);
-    if (profileEd) profileEd.style.display = "none";
   }
 }
 
 /* ── Auth actions ─────────────────────────────────────────────────────────── */
-async function authSignup() {
-  const email = ($("authEmail") || {}).value?.trim();
-  const password = ($("authPassword") || {}).value?.trim();
-  if (!email || !password) { alert("Enter email & password (min 6 chars)."); return; }
-  if (password.length < 6) { alert("Password must be at least 6 characters."); return; }
-
-  const client = sb();
-  if (!client) { alert("Auth not configured."); return; }
-
-  const { data, error } = await client.auth.signUp({ email, password });
-  if (error) { alert("Sign-up error: " + error.message); return; }
-
-  if (data?.user?.identities?.length === 0) {
-    alert("An account with this email already exists. Try signing in.");
-  } else if (data?.user && !data.session) {
-    alert("Check your email for a confirmation link, then sign in.");
-  } else {
-    await refreshUI();
-  }
-}
-
-async function authLogin() {
-  const email = ($("authEmail") || {}).value?.trim();
-  const password = ($("authPassword") || {}).value?.trim();
-  if (!email || !password) { alert("Enter email & password."); return; }
-
-  const client = sb();
-  if (!client) { alert("Auth not configured."); return; }
-
-  const { error } = await client.auth.signInWithPassword({ email, password });
-  if (error) { alert("Sign-in error: " + error.message); return; }
-  await refreshUI();
-}
-
 async function authLogout() {
   const client = sb();
   if (client) await client.auth.signOut();
-  await refreshUI();
-}
-
-/** Guard – returns false (blocks navigation) if not signed in. */
-async function guardAsk() {
-  const user = await getUser();
-  if (!user) {
-    alert("Please sign in first to ask a question.");
-    return false;
-  }
-  return true;        // allow navigation
+  window.location.replace("/login");
 }
 
 /* ── Profile ──────────────────────────────────────────────────────────────── */
@@ -123,7 +96,6 @@ async function openProfileEditor() {
   const isHidden = editor.style.display === "none" || !editor.style.display;
   if (!isHidden) { editor.style.display = "none"; return; }
 
-  // Fetch current profile from backend
   const token = await getToken();
   try {
     const res = await fetch("/api/profile/me", {
@@ -140,7 +112,7 @@ async function openProfileEditor() {
       if ($("profPhone"))    $("profPhone").value    = p.phone      || "";
       if ($("profLang"))     $("profLang").value     = p.language   || "";
     }
-  } catch (e) { /* ignore – fields stay empty */ }
+  } catch (e) { /* ignore */ }
   editor.style.display = "block";
 }
 
@@ -194,7 +166,7 @@ async function authFetch(url, payload = {}) {
 
 async function authVotePost(postId, btn) {
   const user = await getUser();
-  if (!user) { alert("Please sign in to vote."); return; }
+  if (!user) { window.location.href = "/login"; return; }
   const { ok, data } = await authFetch("/community/vote_post", { post_id: postId });
   if (ok && data.success) {
     const span = btn.querySelector("span") || btn;
@@ -208,7 +180,7 @@ async function authVotePost(postId, btn) {
 
 async function authVoteReply(replyId, btn) {
   const user = await getUser();
-  if (!user) { alert("Please sign in to vote."); return; }
+  if (!user) { window.location.href = "/login"; return; }
   const { ok, data } = await authFetch("/community/vote_reply", { reply_id: replyId });
   if (ok && data.success) {
     btn.querySelector("span").textContent = data.upvotes;
@@ -220,7 +192,7 @@ async function authVoteReply(replyId, btn) {
 
 async function authMarkSolution(replyId, postId) {
   const user = await getUser();
-  if (!user) { alert("Please sign in to mark a solution."); return; }
+  if (!user) { window.location.href = "/login"; return; }
   if (!confirm("Mark this reply as the accepted solution?")) return;
   const { ok, data } = await authFetch("/community/solve", { reply_id: replyId, post_id: postId });
   if (ok && data.success) location.reload();
@@ -229,7 +201,7 @@ async function authMarkSolution(replyId, postId) {
 
 async function authSubmitReply(postId) {
   const user = await getUser();
-  if (!user) { alert("Please sign in to reply."); return; }
+  if (!user) { window.location.href = "/login"; return; }
   const body = ($("replyBody") || {}).value?.trim();
   if (!body) { alert("Please write a reply first."); return; }
   const author = ($("replyAuthor") || {}).value?.trim() || "Anonymous Farmer";
@@ -244,10 +216,7 @@ async function authSubmitReply(postId) {
 }
 
 /* ── Expose to global scope (called from onclick in templates) ───────────── */
-window.authSignup        = authSignup;
-window.authLogin         = authLogin;
 window.authLogout        = authLogout;
-window.guardAsk          = guardAsk;
 window.openProfileEditor = openProfileEditor;
 window.saveProfile       = saveProfile;
 window.getToken          = getToken;
@@ -258,13 +227,21 @@ window.authVoteReply     = authVoteReply;
 window.authMarkSolution  = authMarkSolution;
 window.authSubmitReply   = authSubmitReply;
 
-/* ── Init on load ─────────────────────────────────────────────────────────── */
+/* ── Init ─────────────────────────────────────────────────────────────────── */
 sb();  // eagerly create client
-refreshUI();
 
-// Listen for auth changes (e.g. email confirmation redirect)
+// Gate: if not on /login, require auth
+const path = window.location.pathname;
+if (path !== "/login") {
+  authGate();
+}
+
+// Update navbar user controls
+refreshNavbar();
+
+// React to auth state changes (e.g. token refresh, tab sync)
 if (sb()) {
   sb().auth.onAuthStateChange((_event, _session) => {
-    refreshUI();
+    refreshNavbar();
   });
 }

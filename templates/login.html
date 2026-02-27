@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Sashyasnehi AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    window.SUPABASE_URL  = "{{ SUPABASE_URL }}";
+    window.SUPABASE_ANON_KEY = "{{ SUPABASE_ANON_KEY }}";
+  </script>
+  <style>
+    body { background:linear-gradient(135deg,#e8f5e9 0%,#f1f8e9 40%,#fff8e1 100%); min-height:100vh; display:flex; align-items:center; justify-content:center; font-family:inherit; }
+    .login-container { width:100%; max-width:420px; padding:20px; }
+    .login-brand { text-align:center; margin-bottom:28px; }
+    .login-brand h1 { font-size:1.8rem; color:#2e7d32; margin:0; }
+    .login-brand p { color:#6b7b6e; font-size:0.92rem; margin-top:6px; }
+    .login-card { background:#fff; border-radius:16px; padding:36px 32px; box-shadow:0 8px 32px rgba(46,125,50,0.10); border:1.5px solid #c8e6c9; }
+    .login-tabs { display:flex; gap:0; margin-bottom:28px; border-radius:10px; overflow:hidden; border:1.5px solid #c8e6c9; }
+    .login-tab { flex:1; padding:11px 0; text-align:center; font-weight:700; font-size:0.95rem; cursor:pointer; transition:all .2s; background:#f1f8e9; color:#6b7b6e; border:none; }
+    .login-tab.active { background:#2e7d32; color:#fff; }
+    .login-tab:hover:not(.active) { background:#dcedc8; }
+    .login-form { display:none; }
+    .login-form.active { display:block; }
+    .field-group { margin-bottom:18px; }
+    .field-group label { display:block; font-weight:600; font-size:0.85rem; color:#2e7d32; margin-bottom:6px; }
+    .field-group input { width:100%; padding:12px 14px; border:1.5px solid #c8e6c9; border-radius:10px; font-size:0.95rem; outline:none; transition:border .2s; background:#fafcf9; box-sizing:border-box; }
+    .field-group input:focus { border-color:#2e7d32; box-shadow:0 0 0 3px rgba(46,125,50,0.08); }
+    .login-btn { width:100%; padding:13px; border:none; border-radius:10px; font-size:1rem; font-weight:700; cursor:pointer; transition:all .2s; background:#2e7d32; color:#fff; margin-top:6px; }
+    .login-btn:hover { background:#1b5e20; transform:translateY(-1px); box-shadow:0 4px 16px rgba(46,125,50,0.18); }
+    .login-btn:active { transform:translateY(0); }
+    .login-btn.secondary { background:#fff; color:#2e7d32; border:1.5px solid #2e7d32; }
+    .login-btn.secondary:hover { background:#e8f5e9; }
+    .login-divider { text-align:center; color:#aaa; margin:20px 0; font-size:0.85rem; position:relative; }
+    .login-divider::before,.login-divider::after { content:''; position:absolute; top:50%; width:35%; height:1px; background:#ddd; }
+    .login-divider::before { left:0; }
+    .login-divider::after { right:0; }
+    .login-msg { padding:10px 14px; border-radius:8px; font-size:0.88rem; margin-bottom:16px; display:none; }
+    .login-msg.error { display:block; background:#ffebee; color:#c62828; border:1px solid #ef9a9a; }
+    .login-msg.success { display:block; background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; }
+    .login-msg.info { display:block; background:#e3f2fd; color:#1565c0; border:1px solid #90caf9; }
+    .login-footer { text-align:center; margin-top:24px; color:#6b7b6e; font-size:0.85rem; }
+    .login-footer a { color:#2e7d32; font-weight:600; text-decoration:none; }
+    .login-footer a:hover { text-decoration:underline; }
+    .password-hint { font-size:0.78rem; color:#999; margin-top:4px; }
+    .login-features { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:18px; }
+    .login-feature { background:#f1f8e9; border-radius:20px; padding:4px 12px; font-size:0.78rem; color:#558b2f; font-weight:600; }
+    @media(max-width:500px) { .login-container { padding:12px; } .login-card { padding:24px 18px; } }
+  </style>
+</head>
+<body>
+
+<div class="login-container">
+  <div class="login-brand">
+    <h1>🌿 Sashyasnehi AI</h1>
+    <p>AI-powered crop advisory for Indian farmers</p>
+  </div>
+
+  <div class="login-card">
+    <!-- Tabs -->
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="showTab('signin')" id="tabSignin">Sign In</button>
+      <button class="login-tab" onclick="showTab('signup')" id="tabSignup">Sign Up</button>
+    </div>
+
+    <!-- Message box -->
+    <div class="login-msg" id="loginMsg"></div>
+
+    <!-- Sign In Form -->
+    <div class="login-form active" id="formSignin">
+      <div class="field-group">
+        <label for="siEmail">Email address</label>
+        <input id="siEmail" type="email" placeholder="farmer@example.com" autocomplete="email">
+      </div>
+      <div class="field-group">
+        <label for="siPassword">Password</label>
+        <input id="siPassword" type="password" placeholder="Your password" autocomplete="current-password">
+      </div>
+      <button class="login-btn" onclick="doSignIn()" id="btnSignin">Sign In</button>
+    </div>
+
+    <!-- Sign Up Form -->
+    <div class="login-form" id="formSignup">
+      <div class="field-group">
+        <label for="suName">Full Name</label>
+        <input id="suName" type="text" placeholder="Your name" autocomplete="name">
+      </div>
+      <div class="field-group">
+        <label for="suEmail">Email address</label>
+        <input id="suEmail" type="email" placeholder="farmer@example.com" autocomplete="email">
+      </div>
+      <div class="field-group">
+        <label for="suPassword">Password</label>
+        <input id="suPassword" type="password" placeholder="Create a password" autocomplete="new-password">
+        <div class="password-hint">Minimum 6 characters</div>
+      </div>
+      <button class="login-btn" onclick="doSignUp()" id="btnSignup">Create Account</button>
+    </div>
+
+    <div class="login-divider">secure &amp; free</div>
+
+    <div class="login-features">
+      <span class="login-feature">🤖 AI Advisory</span>
+      <span class="login-feature">🌾 Community</span>
+      <span class="login-feature">📈 Market Prices</span>
+      <span class="login-feature">🌦 Weather</span>
+    </div>
+  </div>
+
+  <div class="login-footer">
+    <a href="{{ url_for('home') }}">← Back to Home (browse without account)</a>
+  </div>
+</div>
+
+<script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+  const SUPA_URL  = window.SUPABASE_URL  || "";
+  const SUPA_KEY  = window.SUPABASE_ANON_KEY || "";
+  let _sb = null;
+  if (SUPA_URL && SUPA_KEY) _sb = createClient(SUPA_URL, SUPA_KEY);
+
+  // If already signed in → go to home
+  if (_sb) {
+    _sb.auth.getSession().then(({ data }) => {
+      if (data?.session) window.location.href = "{{ url_for('home') }}";
+    });
+  }
+
+  function msg(text, type) {
+    const el = document.getElementById("loginMsg");
+    el.textContent = text;
+    el.className = "login-msg " + type;
+  }
+
+  window.showTab = function(tab) {
+    document.getElementById("loginMsg").className = "login-msg";
+    document.getElementById("formSignin").classList.toggle("active", tab === "signin");
+    document.getElementById("formSignup").classList.toggle("active", tab === "signup");
+    document.getElementById("tabSignin").classList.toggle("active", tab === "signin");
+    document.getElementById("tabSignup").classList.toggle("active", tab === "signup");
+  };
+
+  window.doSignIn = async function() {
+    const email = document.getElementById("siEmail").value.trim();
+    const password = document.getElementById("siPassword").value;
+    if (!email || !password) { msg("Enter email and password.", "error"); return; }
+    if (!_sb) { msg("Auth service not configured.", "error"); return; }
+
+    const btn = document.getElementById("btnSignin");
+    btn.disabled = true; btn.textContent = "Signing in...";
+
+    const { error } = await _sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      msg(error.message, "error");
+      btn.disabled = false; btn.textContent = "Sign In";
+      return;
+    }
+    msg("Signed in! Redirecting...", "success");
+    const next = new URLSearchParams(window.location.search).get("next") || "{{ url_for('home') }}";
+    setTimeout(() => window.location.href = next, 600);
+  };
+
+  window.doSignUp = async function() {
+    const name = document.getElementById("suName").value.trim();
+    const email = document.getElementById("suEmail").value.trim();
+    const password = document.getElementById("suPassword").value;
+    if (!email || !password) { msg("Fill all required fields.", "error"); return; }
+    if (password.length < 6) { msg("Password must be at least 6 characters.", "error"); return; }
+    if (!_sb) { msg("Auth service not configured.", "error"); return; }
+
+    const btn = document.getElementById("btnSignup");
+    btn.disabled = true; btn.textContent = "Creating account...";
+
+    const { data, error } = await _sb.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name } }
+    });
+
+    if (error) {
+      msg(error.message, "error");
+      btn.disabled = false; btn.textContent = "Create Account";
+      return;
+    }
+
+    if (data?.user?.identities?.length === 0) {
+      msg("An account with this email already exists. Try signing in.", "error");
+      btn.disabled = false; btn.textContent = "Create Account";
+      return;
+    }
+
+    if (data?.user && !data.session) {
+      msg("Check your email for a confirmation link, then sign in.", "info");
+      btn.disabled = false; btn.textContent = "Create Account";
+      return;
+    }
+
+    msg("Account created! Redirecting...", "success");
+    const next = new URLSearchParams(window.location.search).get("next") || "{{ url_for('home') }}";
+    setTimeout(() => window.location.href = next, 600);
+  };
+
+  // Enter key support
+  document.getElementById("siPassword").addEventListener("keydown", e => { if (e.key === "Enter") window.doSignIn(); });
+  document.getElementById("suPassword").addEventListener("keydown", e => { if (e.key === "Enter") window.doSignUp(); });
+</script>
+
+</body>
+</html>
