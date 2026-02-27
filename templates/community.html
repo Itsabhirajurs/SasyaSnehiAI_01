@@ -130,7 +130,7 @@
           </div>
           <div class="thread-actions">
             <button class="vote-btn {% if post.upvotes > 0 %}voted{% endif %}" 
-                    onclick="votePost({{ post.id }}, this)">
+                    onclick="authVotePost({{ post.id }}, this)">
               &#9650; {{ post.upvotes }}
             </button>
             <a href="{{ url_for('community_post', post_id=post.id) }}" style="color:var(--muted);">
@@ -151,21 +151,7 @@
 <footer class="footer"><span data-i18n="footer.text">Sashyasnehi AI &copy; 2025 · Built with Flask, TensorFlow &amp; Gemini</span> &mdash; <a href="{{ url_for('home') }}" data-i18n="footer.home">Home</a></footer>
 
 <script>
-const VISITOR_ID = 'visitor_' + Math.random().toString(36).slice(2,9);
-
-async function votePost(postId, btn) {
-  try {
-    const r = await fetch('/community/vote_post', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({post_id:postId, voter_id:VISITOR_ID})
-    });
-    const d = await r.json();
-    if (d.success) {
-      btn.textContent = '▲ ' + d.upvotes;
-      btn.classList.toggle('voted', d.voted);
-    }
-  } catch(e) {}
-}
+/* Legacy inline vote removed — all actions now handled by auth.js */
 </script>
 </body>
 </html>

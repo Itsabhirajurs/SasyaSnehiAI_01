@@ -6,6 +6,11 @@
   <title>{{ post.title }} — Community — Sashyasnehi AI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  <script>
+    window.SUPABASE_URL = "{{ SUPABASE_URL }}";
+    window.SUPABASE_ANON_KEY = "{{ SUPABASE_ANON_KEY }}";
+  </script>
+  <script type="module" src="{{ url_for('static', filename='auth.js') }}"></script>
 </head>
 <body>
 <nav class="navbar">
@@ -34,6 +39,23 @@
     <a href="{{ url_for('community') }}" style="color:var(--muted);font-size:0.9rem;">&larr; Back to Community</a>
   </div>
 
+  <!-- Auth bar -->
+  <div class="card" id="authCard" style="margin-bottom:12px;">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;">
+      <div id="authStatus" style="font-weight:600;">Checking sign-in...</div>
+      <div id="authSignedOut" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <input id="authEmail" type="email" placeholder="Email" style="min-width:200px;">
+        <input id="authPassword" type="password" placeholder="Password (min 6)" style="min-width:160px;">
+        <button class="btn btn-sm" onclick="authSignup()">Sign up</button>
+        <button class="btn btn-outline btn-sm" onclick="authLogin()">Sign in</button>
+      </div>
+      <div id="authSignedIn" style="display:none;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span id="authUserEmail" style="color:var(--muted);"></span>
+        <button class="btn btn-outline btn-sm" onclick="authLogout()">Sign out</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Post -->
   <div class="card">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
@@ -51,7 +73,7 @@
       </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:16px;align-items:center;">
-      <button class="vote-btn" id="postVoteBtn" onclick="votePost({{ post.id }})">
+      <button class="vote-btn" id="postVoteBtn" onclick="authVotePost({{ post.id }}, this)">
         &#9650; <span id="postUpvotes">{{ post.upvotes }}</span> Helpful
       </button>
       <a href="{{ url_for('community') }}?plant={{ post.plant }}" class="btn-secondary btn-sm">More {{ post.plant }} topics</a>
@@ -72,11 +94,11 @@
       <div class="reply-meta">
         <strong>{{ reply.author }}</strong>
         <span>{{ reply.time_ago }}</span>
-        <button class="vote-btn" onclick="voteReply({{ reply.id }}, this)">
+        <button class="vote-btn" onclick="authVoteReply({{ reply.id }}, this)">
           &#9650; <span>{{ reply.upvotes }}</span>
         </button>
         {% if post.status != 'solved' %}
-          <button class="vote-btn" onclick="markSolution({{ reply.id }}, {{ post.id }})">
+          <button class="vote-btn" onclick="authMarkSolution({{ reply.id }}, {{ post.id }})">
             &#10003; Mark as Solution
           </button>
         {% endif %}
@@ -98,70 +120,14 @@
         <input id="replyAuthor" type="text" placeholder="Farmer name" style="font:inherit;padding:9px 13px;border:1.5px solid #cde0cb;border-radius:9px;background:#fafcf9;outline:none;width:100%;">
       </div>
     </div>
-    <button class="btn" onclick="submitReply({{ post.id }})">Post Reply</button>
+    <button class="btn" onclick="authSubmitReply({{ post.id }})">Post Reply</button>
   </div>
 </div>
 
 <footer class="footer">Sashyasnehi AI &copy; 2025</footer>
 
 <script>
-const VISITOR_ID = 'visitor_' + Math.random().toString(36).slice(2,9);
-
-async function votePost(postId) {
-  const btn = document.getElementById('postVoteBtn');
-  const span = document.getElementById('postUpvotes');
-  try {
-    const r = await fetch('/community/vote_post', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({post_id:postId, voter_id:VISITOR_ID})
-    });
-    const d = await r.json();
-    if (d.success) { span.textContent = d.upvotes; btn.classList.toggle('voted',d.voted); }
-  } catch(e) {}
-}
-
-async function voteReply(replyId, btn) {
-  try {
-    const r = await fetch('/community/vote_reply', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({reply_id:replyId, voter_id:VISITOR_ID})
-    });
-    const d = await r.json();
-    if (d.success) {
-      btn.querySelector('span').textContent = d.upvotes;
-      btn.classList.toggle('voted',d.voted);
-    }
-  } catch(e) {}
-}
-
-async function markSolution(replyId, postId) {
-  if (!confirm('Mark this reply as the accepted solution?')) return;
-  try {
-    const r = await fetch('/community/solve', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({reply_id:replyId, post_id:postId})
-    });
-    const d = await r.json();
-    if (d.success) location.reload();
-  } catch(e) {}
-}
-
-async function submitReply(postId) {
-  const body = document.getElementById('replyBody').value.trim();
-  const author = document.getElementById('replyAuthor').value.trim() || 'Anonymous Farmer';
-  if (!body) { alert('Please write a reply first.'); return; }
-  try {
-    const r = await fetch('/community/reply', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({post_id:postId, body, author})
-    });
-    const d = await r.json();
-    if (d.success) {
-      document.getElementById('replyBody').value = '';
-      location.reload();
-    } else { alert('Error posting reply.'); }
-  } catch(e) { alert('Error posting reply.'); }
-}
+/* Legacy inline JS removed — all actions now handled by auth.js */
 </script>
 </body>
 </html>

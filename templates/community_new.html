@@ -6,6 +6,11 @@
   <title>New Post — Community — Sashyasnehi AI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  <script>
+    window.SUPABASE_URL = "{{ SUPABASE_URL }}";
+    window.SUPABASE_ANON_KEY = "{{ SUPABASE_ANON_KEY }}";
+  </script>
+  <script type="module" src="{{ url_for('static', filename='auth.js') }}"></script>
 </head>
 <body>
 <nav class="navbar">
@@ -40,6 +45,23 @@
   {% endif %}
 
   <form method="POST" class="form-new-post">
+    <input type="hidden" name="supabase_token" id="supabaseTokenField" value="">
+
+    <div class="card" id="authCard" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;">
+        <div id="authStatus" style="font-weight:600;">Checking sign-in...</div>
+        <div id="authSignedOut" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input id="authEmail" type="email" placeholder="Email" style="min-width:200px;">
+          <input id="authPassword" type="password" placeholder="Password (min 6)" style="min-width:160px;">
+          <button type="button" class="btn btn-sm" onclick="authSignup()">Sign up</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="authLogin()">Sign in</button>
+        </div>
+        <div id="authSignedIn" style="display:none;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span id="authUserEmail" style="color:var(--muted);"></span>
+          <button type="button" class="btn btn-outline btn-sm" onclick="authLogout()">Sign out</button>
+        </div>
+      </div>
+    </div>
     <div class="form-section">
       <div class="form-section-title">Your Question</div>
       <div class="form-group" style="margin-bottom:14px;">
