@@ -15,14 +15,20 @@
       <span class="leaf">🌿</span> Sashyasnehi AI
     </a>
     <ul class="nav-links">
-      <li><a href="{{ url_for('home') }}" class="active">Home</a></li>
-      <li><a href="{{ url_for('community') }}">Community</a></li>
-      <li><a href="{{ url_for('market_page') }}">Market</a></li>
-      <li><a href="{{ url_for('about') }}">About</a></li>
+      <li><a href="{{ url_for('home') }}" class="active" data-i18n="nav.home">Home</a></li>
+      <li><a href="{{ url_for('community') }}" data-i18n="nav.community">Community</a></li>
+      <li><a href="{{ url_for('market_page') }}" data-i18n="nav.market">Market</a></li>
+      <li><a href="{{ url_for('fertilizer_calculator') }}" data-i18n="nav.fertilizer">Fertilizer</a></li>
+      <li><a href="{{ url_for('cultivation_tips') }}" data-i18n="nav.cultivation">Cultivation</a></li>
+      <li><a href="{{ url_for('about') }}" data-i18n="nav.about">About</a></li>
       <li>
-        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
+        <select class="lang-select lang-switcher" title="Switch language">
+          <option value="English">English</option>
+          <option value="Hindi">Hindi</option>
+          <option value="Kannada">Kannada</option>
+        </select>
       </li>
-      <li><a href="{{ url_for('upload') }}" class="btn-nav">Analyze Crop</a></li>
+      <li><a href="{{ url_for('upload') }}" class="btn-nav" data-i18n="nav.analyze">Analyze Crop</a></li>
     </ul>
   </nav>
 
@@ -30,126 +36,126 @@
 
     <!-- HERO -->
     <section class="hero-section" style="position:relative;overflow:hidden;">
-      <h1>Sashyasnehi AI</h1>
-      <p class="tagline">AI-powered crop disease detection &amp; smart advisory for Indian farmers — instant, multilingual, free.</p>
+      <h1 data-i18n="hero.title">Sashyasnehi AI</h1>
+      <p class="tagline" data-i18n="hero.tagline">AI-powered crop disease detection &amp; smart advisory for Indian farmers — instant, multilingual, free.</p>
       <div class="hero-badges">
-        <span class="badge">🤖 MobileNetV2 AI</span>
-        <span class="badge">🌦 Weather Risk</span>
-        <span class="badge">⚗️ Chemical Safety</span>
-        <span class="badge">💬 Gemini Chat</span>
-        <span class="badge">🌐 Hindi · Kannada · English</span>
-        <span class="badge">📈 ML Market Prices</span>
-        <span class="badge">🏛 Govt Schemes</span>
+        <span class="badge" data-i18n="hero.badge1">🤖 MobileNetV2 AI</span>
+        <span class="badge" data-i18n="hero.badge2">🌦 Weather Risk</span>
+        <span class="badge" data-i18n="hero.badge3">⚗️ Chemical Safety</span>
+        <span class="badge" data-i18n="hero.badge4">💬 Gemini Chat</span>
+        <span class="badge" data-i18n="hero.badge5">🌐 Hindi · Kannada · English</span>
+        <span class="badge" data-i18n="hero.badge6">📈 ML Market Prices</span>
+        <span class="badge" data-i18n="hero.badge7">🏛 Govt Schemes</span>
       </div>
       <a class="hero-cta" href="{{ url_for('upload') }}">
-        Start Analysis &rarr;
+        <span data-i18n="hero.cta">Start Analysis &rarr;</span>
       </a>
       <div class="hero-scroll-hint">
-        <span>↓ Scroll</span>
+        <span data-i18n="hero.scroll">↓ Scroll</span>
       </div>
     </section>
 
     <!-- DISEASE ALERTS STRIP -->
-    <h2 class="section-heading" style="margin-top:36px;">🚨 Active Disease Alerts</h2>
-    <p class="section-sub">Current crop disease advisories from ICAR and State Agriculture Departments.</p>
+    <h2 class="section-heading" style="margin-top:36px;" data-i18n="alerts.heading">🚨 Active Disease Alerts</h2>
+    <p class="section-sub" data-i18n="alerts.sub">Current crop disease advisories from ICAR and State Agriculture Departments.</p>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:40px;">
       <div class="disease-alert-card">
         <span class="da-icon">🍅</span>
         <div>
-          <span class="da-crop">Tomato</span>
-          <div class="da-title">Late Blight Alert — South Karnataka</div>
-          <div class="da-desc">High humidity &amp; cool nights favour <em>Phytophthora infestans</em>. Apply Mancozeb or Metalaxyl at 7-day intervals.</div>
+          <span class="da-crop" data-i18n="alerts.card1.crop">Tomato</span>
+          <div class="da-title" data-i18n="alerts.card1.title">Late Blight Alert — South Karnataka</div>
+          <div class="da-desc" data-i18n="alerts.card1.desc">High humidity &amp; cool nights favour <em>Phytophthora infestans</em>. Apply Mancozeb or Metalaxyl at 7-day intervals.</div>
         </div>
       </div>
       <div class="disease-alert-card">
         <span class="da-icon">🌾</span>
         <div>
-          <span class="da-crop">Wheat</span>
-          <div class="da-title">Yellow Rust Warning — Punjab &amp; Haryana</div>
-          <div class="da-desc">Stripe rust <em>(Puccinia striiformis)</em> reported in early-sown plots. Apply Propiconazole 25 EC at flag-leaf stage.</div>
+          <span class="da-crop" data-i18n="alerts.card2.crop">Wheat</span>
+          <div class="da-title" data-i18n="alerts.card2.title">Yellow Rust Warning — Punjab &amp; Haryana</div>
+          <div class="da-desc" data-i18n="alerts.card2.desc">Stripe rust <em>(Puccinia striiformis)</em> reported in early-sown plots. Apply Propiconazole 25 EC at flag-leaf stage.</div>
         </div>
       </div>
       <div class="disease-alert-card">
         <span class="da-icon">🥔</span>
         <div>
-          <span class="da-crop">Potato</span>
-          <div class="da-title">Early Blight Incidence — UP &amp; Bihar</div>
-          <div class="da-desc">Warm days followed by wet nights increasing <em>Alternaria solani</em> spread. Use Chlorothalonil 75 WP preventively.</div>
+          <span class="da-crop" data-i18n="alerts.card3.crop">Potato</span>
+          <div class="da-title" data-i18n="alerts.card3.title">Early Blight Incidence — UP &amp; Bihar</div>
+          <div class="da-desc" data-i18n="alerts.card3.desc">Warm days followed by wet nights increasing <em>Alternaria solani</em> spread. Use Chlorothalonil 75 WP preventively.</div>
         </div>
       </div>
     </div>
 
     <!-- FEATURES -->
-    <h2 class="section-heading">What Sashyasnehi Does</h2>
-    <p class="section-sub">Eight intelligent modules working together for complete crop health insight.</p>
+    <h2 class="section-heading" data-i18n="features.heading">What Sashyasnehi Does</h2>
+    <p class="section-sub" data-i18n="features.sub">Eight intelligent modules working together for complete crop health insight.</p>
 
     <div class="features-grid">
       <div class="feature-card">
         <span class="feature-icon">01</span>
-        <h3>Disease Detection</h3>
-        <p>MobileNetV2 transfer learning identifies crop diseases from leaf photos with 93%+ accuracy on PlantVillage.</p>
+        <h3 data-i18n="features.f1.title">Disease Detection</h3>
+        <p data-i18n="features.f1.desc">MobileNetV2 transfer learning identifies crop diseases from leaf photos with 93%+ accuracy on PlantVillage.</p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">02</span>
-        <h3>Severity Estimation</h3>
-        <p>HSV colour analysis measures infected area percentage and classifies as Mild, Moderate, or Severe.</p>
+        <h3 data-i18n="features.f2.title">Severity Estimation</h3>
+        <p data-i18n="features.f2.desc">HSV colour analysis measures infected area percentage and classifies as Mild, Moderate, or Severe.</p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">03</span>
-        <h3>Weather Risk Scoring</h3>
-        <p>Live OpenWeather data — humidity, temperature, rain probability — adjusts overall disease risk score dynamically.</p>
+        <h3 data-i18n="features.f3.title">Weather Risk Scoring</h3>
+        <p data-i18n="features.f3.desc">Live OpenWeather data — humidity, temperature, rain probability — adjusts overall disease risk score dynamically.</p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">04</span>
-        <h3>Chemical Safety</h3>
-        <p>Cross-checks past chemicals against a safety database, flags hazards and suggests safer bio-alternatives.</p>
+        <h3 data-i18n="features.f4.title">Chemical Safety</h3>
+        <p data-i18n="features.f4.desc">Cross-checks past chemicals against a safety database, flags hazards and suggests safer bio-alternatives.</p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">05</span>
-        <h3>Smart Advisory</h3>
-        <p>Rule-based engine generates contextual treatment steps, watering advice and soil-specific guidance.</p>
+        <h3 data-i18n="features.f5.title">Smart Advisory</h3>
+        <p data-i18n="features.f5.desc">Rule-based engine generates contextual treatment steps, watering advice and soil-specific guidance.</p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">06</span>
-        <h3>Gemini AI Chat</h3>
-        <p>Ask follow-up questions in your language. Google Gemini answers with farm-specific context in real time.</p>
+        <h3 data-i18n="features.f6.title">Gemini AI Chat</h3>
+        <p data-i18n="features.f6.desc">Ask follow-up questions in your language. Google Gemini answers with farm-specific context in real time.</p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">07</span>
-        <h3>Market Prices</h3>
-        <p>Live mandi prices from 1,000+ APMCs with ML-predicted next-week trends using Ridge regression models (R²=0.95).</p>
+        <h3 data-i18n="features.f7.title">Market Prices</h3>
+        <p data-i18n="features.f7.desc">Live mandi prices from 1,000+ APMCs with ML-predicted next-week trends using Ridge regression models (R²=0.95).</p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">08</span>
-        <h3>Govt Schemes</h3>
-        <p>PM-KISAN, PMFBY, eNAM and state schemes matched to your crop and location instantly.</p>
+        <h3 data-i18n="features.f8.title">Govt Schemes</h3>
+        <p data-i18n="features.f8.desc">PM-KISAN, PMFBY, eNAM and state schemes matched to your crop and location instantly.</p>
       </div>
     </div>
 
     <!-- HOW IT WORKS -->
     <section class="steps-section">
-      <h2 class="section-heading" style="text-align:left;margin-bottom:4px;">How It Works</h2>
-      <p class="section-sub" style="text-align:left;margin-bottom:0;">Four simple steps to a full crop health report.</p>
+      <h2 class="section-heading" style="text-align:left;margin-bottom:4px;" data-i18n="steps.heading">How It Works</h2>
+      <p class="section-sub" style="text-align:left;margin-bottom:0;" data-i18n="steps.sub">Four simple steps to a full crop health report.</p>
       <div class="steps-grid">
         <div class="step">
           <div class="step-num">1</div>
-          <strong>Upload Image</strong>
-          <p>Take a close-up photo of the diseased leaf and upload it.</p>
+          <strong data-i18n="steps.s1.title">Upload Image</strong>
+          <p data-i18n="steps.s1.desc">Take a close-up photo of the diseased leaf and upload it.</p>
         </div>
         <div class="step">
           <div class="step-num">2</div>
-          <strong>Fill Details</strong>
-          <p>Add chemicals used, soil type, watering habits and optional location.</p>
+          <strong data-i18n="steps.s2.title">Fill Details</strong>
+          <p data-i18n="steps.s2.desc">Add chemicals used, soil type, watering habits and optional location.</p>
         </div>
         <div class="step">
           <div class="step-num">3</div>
-          <strong>AI Analyzes</strong>
-          <p>Disease model, severity engine and weather risk all process in seconds.</p>
+          <strong data-i18n="steps.s3.title">AI Analyzes</strong>
+          <p data-i18n="steps.s3.desc">Disease model, severity engine and weather risk all process in seconds.</p>
         </div>
         <div class="step">
           <div class="step-num">4</div>
-          <strong>Get Advisory</strong>
-          <p>Read detailed treatment advice and chat with Gemini for follow-up help.</p>
+          <strong data-i18n="steps.s4.title">Get Advisory</strong>
+          <p data-i18n="steps.s4.desc">Read detailed treatment advice and chat with Gemini for follow-up help.</p>
         </div>
       </div>
     </section>
@@ -158,149 +164,149 @@
     <div class="stats-row">
       <div class="stat-box">
         <span class="stat-num">6</span>
-        <span class="stat-label">Crop Diseases</span>
+        <span class="stat-label" data-i18n="stats.diseases">Crop Diseases</span>
       </div>
       <div class="stat-box">
         <span class="stat-num">8</span>
-        <span class="stat-label">AI Modules</span>
+        <span class="stat-label" data-i18n="stats.modules">AI Modules</span>
       </div>
       <div class="stat-box">
         <span class="stat-num">93%</span>
-        <span class="stat-label">Model Accuracy</span>
+        <span class="stat-label" data-i18n="stats.accuracy">Model Accuracy</span>
       </div>
       <div class="stat-box">
         <span class="stat-num">3</span>
-        <span class="stat-label">Languages</span>
+        <span class="stat-label" data-i18n="stats.languages">Languages</span>
       </div>
       <div class="stat-box">
         <span class="stat-num">10</span>
-        <span class="stat-label">Price Models</span>
+        <span class="stat-label" data-i18n="stats.priceModels">Price Models</span>
       </div>
       <div class="stat-box">
         <span class="stat-num">0&#8377;</span>
-        <span class="stat-label">Cost to Use</span>
+        <span class="stat-label" data-i18n="stats.cost">Cost to Use</span>
       </div>
     </div>
 
     <!-- CROP CALENDAR -->
-    <h2 class="section-heading" style="margin-top:8px;">&#128197; Seasonal Crop Calendar — India</h2>
-    <p class="section-sub">What to sow and harvest each season for optimal yield.</p>
+    <h2 class="section-heading" style="margin-top:8px;" data-i18n="calendar.heading">&#128197; Seasonal Crop Calendar — India</h2>
+    <p class="section-sub" data-i18n="calendar.sub">What to sow and harvest each season for optimal yield.</p>
     <div class="crop-calendar-grid" style="margin-bottom:40px;">
       <div class="cal-card">
-        <span class="cal-month-badge">Kharif (Jun–Oct)</span>
-        <h4>Sow &amp; Grow</h4>
+        <span class="cal-month-badge" data-i18n="calendar.kharif.badge">Kharif (Jun–Oct)</span>
+        <h4 data-i18n="calendar.kharif.title">Sow &amp; Grow</h4>
         <ul>
-          <li>Rice (Paddy)</li>
-          <li>Cotton</li>
-          <li>Maize / Corn</li>
-          <li>Groundnut</li>
-          <li>Sugarcane</li>
-          <li>Soybeans</li>
+          <li data-i18n="calendar.kharif.rice">Rice (Paddy)</li>
+          <li data-i18n="calendar.kharif.cotton">Cotton</li>
+          <li data-i18n="calendar.kharif.maize">Maize / Corn</li>
+          <li data-i18n="calendar.kharif.groundnut">Groundnut</li>
+          <li data-i18n="calendar.kharif.sugarcane">Sugarcane</li>
+          <li data-i18n="calendar.kharif.soybeans">Soybeans</li>
         </ul>
       </div>
       <div class="cal-card">
-        <span class="cal-month-badge">Rabi (Nov–Mar)</span>
-        <h4>Sow &amp; Grow</h4>
+        <span class="cal-month-badge" data-i18n="calendar.rabi.badge">Rabi (Nov–Mar)</span>
+        <h4 data-i18n="calendar.rabi.title">Sow &amp; Grow</h4>
         <ul>
-          <li>Wheat</li>
-          <li>Mustard</li>
-          <li>Gram / Chickpea</li>
-          <li>Peas</li>
-          <li>Barley</li>
-          <li>Potato</li>
+          <li data-i18n="calendar.rabi.wheat">Wheat</li>
+          <li data-i18n="calendar.rabi.mustard">Mustard</li>
+          <li data-i18n="calendar.rabi.chickpea">Gram / Chickpea</li>
+          <li data-i18n="calendar.rabi.peas">Peas</li>
+          <li data-i18n="calendar.rabi.barley">Barley</li>
+          <li data-i18n="calendar.rabi.potato">Potato</li>
         </ul>
       </div>
       <div class="cal-card">
-        <span class="cal-month-badge">Zaid (Mar–Jun)</span>
-        <h4>Sow &amp; Grow</h4>
+        <span class="cal-month-badge" data-i18n="calendar.zaid.badge">Zaid (Mar–Jun)</span>
+        <h4 data-i18n="calendar.zaid.title">Sow &amp; Grow</h4>
         <ul>
-          <li>Watermelon</li>
-          <li>Muskmelon</li>
-          <li>Cucumber</li>
-          <li>Bitter Gourd</li>
-          <li>Fodder Crops</li>
-          <li>Moong Dal</li>
+          <li data-i18n="calendar.zaid.watermelon">Watermelon</li>
+          <li data-i18n="calendar.zaid.muskmelon">Muskmelon</li>
+          <li data-i18n="calendar.zaid.cucumber">Cucumber</li>
+          <li data-i18n="calendar.zaid.bittergourd">Bitter Gourd</li>
+          <li data-i18n="calendar.zaid.fodder">Fodder Crops</li>
+          <li data-i18n="calendar.zaid.moong">Moong Dal</li>
         </ul>
       </div>
       <div class="cal-card">
-        <span class="cal-month-badge">Year-Round</span>
-        <h4>Vegetables</h4>
+        <span class="cal-month-badge" data-i18n="calendar.year.badge">Year-Round</span>
+        <h4 data-i18n="calendar.year.title">Vegetables</h4>
         <ul>
-          <li>Tomato</li>
-          <li>Onion</li>
-          <li>Capsicum / Pepper</li>
-          <li>Brinjal</li>
-          <li>Chilli</li>
-          <li>Leafy Greens</li>
+          <li data-i18n="calendar.year.tomato">Tomato</li>
+          <li data-i18n="calendar.year.onion">Onion</li>
+          <li data-i18n="calendar.year.capsicum">Capsicum / Pepper</li>
+          <li data-i18n="calendar.year.brinjal">Brinjal</li>
+          <li data-i18n="calendar.year.chilli">Chilli</li>
+          <li data-i18n="calendar.year.greens">Leafy Greens</li>
         </ul>
       </div>
     </div>
 
     <!-- QUICK TIPS -->
-    <h2 class="section-heading">&#128161; Quick Farming Tips</h2>
-    <p class="section-sub">Science-backed practices for healthier crops.</p>
+    <h2 class="section-heading" data-i18n="tips.heading">&#128161; Quick Farming Tips</h2>
+    <p class="section-sub" data-i18n="tips.sub">Science-backed practices for healthier crops.</p>
     <div class="tips-grid" style="margin-bottom:48px;">
       <div class="tip-card">
         <span class="tip-icon">&#127777;&#65039;</span>
         <div>
-          <h4>Spray in the Morning</h4>
-          <p>Apply fungicides/insecticides early morning (6–9 AM) when wind is calm, temperatures are low, and drift is minimal.</p>
+          <h4 data-i18n="tips.t1.title">Spray in the Morning</h4>
+          <p data-i18n="tips.t1.desc">Apply fungicides/insecticides early morning (6–9 AM) when wind is calm, temperatures are low, and drift is minimal.</p>
         </div>
       </div>
       <div class="tip-card">
         <span class="tip-icon">&#128167;</span>
         <div>
-          <h4>Drip Over Flood Irrigation</h4>
-          <p>Drip irrigation saves 40–50% water, reduces humidity near plants and significantly decreases fungal disease incidence.</p>
+          <h4 data-i18n="tips.t2.title">Drip Over Flood Irrigation</h4>
+          <p data-i18n="tips.t2.desc">Drip irrigation saves 40–50% water, reduces humidity near plants and significantly decreases fungal disease incidence.</p>
         </div>
       </div>
       <div class="tip-card">
         <span class="tip-icon">&#128260;</span>
         <div>
-          <h4>Crop Rotation Matters</h4>
-          <p>Rotating tomato with non-solanaceous crops breaks pest cycles. Never plant tomato after tomato or potato consecutively.</p>
+          <h4 data-i18n="tips.t3.title">Crop Rotation Matters</h4>
+          <p data-i18n="tips.t3.desc">Rotating tomato with non-solanaceous crops breaks pest cycles. Never plant tomato after tomato or potato consecutively.</p>
         </div>
       </div>
       <div class="tip-card">
         <span class="tip-icon">&#129514;</span>
         <div>
-          <h4>Soil Testing Every Season</h4>
-          <p>Test NPK, pH and micronutrients before each crop. Blind fertilizer use is the #1 cause of toxicity and yield losses.</p>
+          <h4 data-i18n="tips.t4.title">Soil Testing Every Season</h4>
+          <p data-i18n="tips.t4.desc">Test NPK, pH and micronutrients before each crop. Blind fertilizer use is the #1 cause of toxicity and yield losses.</p>
         </div>
       </div>
       <div class="tip-card">
         <span class="tip-icon">&#128027;</span>
         <div>
-          <h4>Scout Weekly for Pests</h4>
-          <p>Walk your fields every 7 days. Early detection of pest eggs on leaf undersides prevents 80% of chemical interventions.</p>
+          <h4 data-i18n="tips.t5.title">Scout Weekly for Pests</h4>
+          <p data-i18n="tips.t5.desc">Walk your fields every 7 days. Early detection of pest eggs on leaf undersides prevents 80% of chemical interventions.</p>
         </div>
       </div>
       <div class="tip-card">
         <span class="tip-icon">&#127807;</span>
         <div>
-          <h4>Neem Oil as First Defense</h4>
-          <p>Neem oil at 2–3 mL/L works against 200+ pest species, is safe for bees and humans, and resists resistance build-up.</p>
+          <h4 data-i18n="tips.t6.title">Neem Oil as First Defense</h4>
+          <p data-i18n="tips.t6.desc">Neem oil at 2–3 mL/L works against 200+ pest species, is safe for bees and humans, and resists resistance build-up.</p>
         </div>
       </div>
     </div>
 
     <!-- CTA CARD -->
     <div class="card" style="text-align:center;padding:44px 36px;background:linear-gradient(135deg,var(--accent-light),var(--bg2));">
-      <h2 style="font-size:1.6rem;margin-bottom:10px;color:var(--accent-dark);">Ready to diagnose your crop?</h2>
-      <p style="color:var(--muted);margin-bottom:28px;">Upload a leaf photo and get a full AI-powered advisory in under 10 seconds — completely free.</p>
-      <a class="btn" href="{{ url_for('upload') }}" style="font-size:1.05rem;padding:13px 36px;">&#128300; Analyze My Crop</a>
+      <h2 style="font-size:1.6rem;margin-bottom:10px;color:var(--accent-dark);" data-i18n="cta.heading">Ready to diagnose your crop?</h2>
+      <p style="color:var(--muted);margin-bottom:28px;" data-i18n="cta.sub">Upload a leaf photo and get a full AI-powered advisory in under 10 seconds — completely free.</p>
+      <a class="btn" href="{{ url_for('upload') }}" style="font-size:1.05rem;padding:13px 36px;"><span data-i18n="cta.btn1">&#128300; Analyze My Crop</span></a>
       &nbsp;&nbsp;
-      <a class="btn-secondary" href="{{ url_for('community') }}" style="font-size:1rem;padding:12px 24px;">&#128172; Join Community</a>
+      <a class="btn-secondary" href="{{ url_for('community') }}" style="font-size:1rem;padding:12px 24px;"><span data-i18n="cta.btn2">&#128172; Join Community</span></a>
     </div>
 
   </div><!-- /page-wrap -->
 
   <footer class="footer">
-    Sashyasnehi AI &copy; 2025 &nbsp;&middot;&nbsp;
-    Built with Flask, TensorFlow &amp; Gemini &nbsp;&middot;&nbsp;
-    <a href="{{ url_for('community') }}">Community</a> &nbsp;&middot;&nbsp;
-    <a href="{{ url_for('market_page') }}">Market</a> &nbsp;&middot;&nbsp;
-    <a href="{{ url_for('about') }}">About</a>
+    <span data-i18n="footer.text">Sashyasnehi AI &copy; 2025 · Built with Flask, TensorFlow &amp; Gemini</span>
+    &nbsp;&middot;&nbsp;
+    <a href="{{ url_for('community') }}" data-i18n="footer.community">Community</a> &nbsp;&middot;&nbsp;
+    <a href="{{ url_for('market_page') }}" data-i18n="footer.market">Market</a> &nbsp;&middot;&nbsp;
+    <a href="{{ url_for('about') }}" data-i18n="footer.about">About</a>
   </footer>
 
 </body>

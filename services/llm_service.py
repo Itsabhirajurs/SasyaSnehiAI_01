@@ -86,7 +86,12 @@ class LLMService:
         if not text or language == "English":
             return text
         if not self.is_available():
-            return text
+            # Fallback to LibreTranslate if Gemini is unavailable
+            try:
+                from services.translation import translate
+                return translate(text, target_lang=language)
+            except Exception:
+                return text
         prompt = (
             f"{SYSTEM_PROMPT}\n"
             f"Translate the following agricultural advisory text into {language}. "

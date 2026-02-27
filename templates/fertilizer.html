@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Fertilizer Calculator — Sashyasnehi AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+<nav class="navbar">
+  <a class="nav-brand" href="{{ url_for('home') }}"><span class="leaf">🌿</span> Sashyasnehi AI</a>
+  <ul class="nav-links">
+    <li><a href="{{ url_for('home') }}" data-i18n="nav.home">Home</a></li>
+    <li><a href="{{ url_for('community') }}" data-i18n="nav.community">Community</a></li>
+    <li><a href="{{ url_for('market_page') }}" data-i18n="nav.market">Market</a></li>
+    <li><a href="{{ url_for('fertilizer_calculator') }}" class="active" data-i18n="nav.fertilizer">Fertilizer</a></li>
+    <li><a href="{{ url_for('cultivation_tips') }}" data-i18n="nav.cultivation">Cultivation</a></li>
+    <li><a href="{{ url_for('about') }}" data-i18n="nav.about">About</a></li>
+    <li>
+      <select class="lang-select lang-switcher" title="Switch language">
+        <option value="English">English</option>
+        <option value="Hindi">Hindi</option>
+        <option value="Kannada">Kannada</option>
+      </select>
+    </li>
+    <li><button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle dark mode">🌙</button></li>
+    <li><a href="{{ url_for('upload') }}" class="btn-nav" data-i18n="nav.analyze">Analyse Crop</a></li>
+  </ul>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-header" style="margin-bottom:16px;">
+    <h2><span data-i18n="fert.title">Fertilizer Calculator</span> <span class="chip chip-success" data-i18n="fert.badge">Offline-ready</span></h2>
+    <p data-i18n="fert.desc">Realistic NPK splits for major crops with current retail price benchmarks (Govt controlled MRP, Feb 2026).</p>
+  </div>
+
+  <div class="card">
+    <h3 data-i18n="fert.inputs">Inputs</h3>
+    <div class="calc-grid">
+      <div class="form-group">
+        <label data-i18n="fert.input.crop">Crop</label>
+        <select id="cropSelect">
+          <option value="Rice" data-i18n="fert.crop.rice">Rice</option>
+          <option value="Wheat" data-i18n="fert.crop.wheat">Wheat</option>
+          <option value="Maize" data-i18n="fert.crop.maize">Maize</option>
+          <option value="Tomato" data-i18n="fert.crop.tomato">Tomato</option>
+          <option value="Potato" data-i18n="fert.crop.potato">Potato</option>
+          <option value="Cotton" data-i18n="fert.crop.cotton">Cotton</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="fert.input.soil">Soil Type</label>
+        <select id="soilSelect">
+          <option value="Loam" data-i18n="fert.soil.loam">Loam</option>
+          <option value="Clay" data-i18n="fert.soil.clay">Clay</option>
+          <option value="Sandy" data-i18n="fert.soil.sandy">Sandy</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-i18n="fert.input.area">Area (acre)</label>
+        <input type="number" id="areaInput" value="1" min="0.1" step="0.1">
+      </div>
+      <div class="form-group">
+        <label data-i18n="fert.input.yield">Target Yield (t/ha, optional)</label>
+        <input type="number" id="yieldInput" placeholder="e.g., 5" min="1" step="0.5">
+      </div>
+    </div>
+    <div class="form-actions" style="justify-content:flex-start;">
+      <button class="btn" onclick="runCalc()" data-i18n="fert.btn.calc">Calculate</button>
+      <button class="btn btn-outline" onclick="resetCalc()" data-i18n="fert.btn.reset">Reset</button>
+    </div>
+  </div>
+
+  <div class="card" id="calcResults" style="display:none;">
+    <h3 data-i18n="fert.rec.title">Recommendation</h3>
+    <div class="result-grid" style="grid-template-columns:1fr 1fr;">
+      <div>
+        <div class="detail-item">
+          <div class="label" data-i18n="fert.rec.npk">NPK need (kg/acre)</div>
+          <div class="value" id="npkNeed">-</div>
+        </div>
+        <div class="detail-item">
+          <div class="label" data-i18n="fert.rec.mix">Product mix</div>
+          <div class="value" id="productMix">-</div>
+        </div>
+        <div class="detail-item">
+          <div class="label" data-i18n="fert.rec.cost">Estimated cost</div>
+          <div class="value" id="costEst">-</div>
+        </div>
+      </div>
+      <div>
+        <div class="detail-item">
+          <div class="label" data-i18n="fert.rec.split">Application split</div>
+          <div class="value" id="splitPlan">-</div>
+        </div>
+        <div class="detail-item">
+          <div class="label" data-i18n="fert.rec.notes">Notes</div>
+          <div class="value" id="notes">-</div>
+        </div>
+      </div>
+    </div>
+    <div class="fert-table-wrap">
+      <div class="table-title" data-i18n="fert.table.title">Retail benchmarks (Govt MRP / common market)</div>
+      <div class="fert-table">
+        <div class="ft-row ft-head"><span data-i18n="fert.table.head.product">Product</span><span data-i18n="fert.table.head.npk">N-P-K%</span><span data-i18n="fert.table.head.bag">Bag size</span><span data-i18n="fert.table.head.price">Price (₹/bag)</span></div>
+        <div class="ft-row"><span data-i18n="fert.product.urea">Urea</span><span>46-0-0</span><span>45 kg</span><span>₹266.5 (MRP)</span></div>
+        <div class="ft-row"><span data-i18n="fert.product.dap">DAP</span><span>18-46-0</span><span>50 kg</span><span>₹1,350</span></div>
+        <div class="ft-row"><span data-i18n="fert.product.mop.full">MOP (Muriate of Potash)</span><span>0-0-60</span><span>50 kg</span><span>₹1,700</span></div>
+        <div class="ft-row"><span data-i18n="fert.product.ssp">SSP (Single Super Phosphate)</span><span>0-16-0 + S</span><span>50 kg</span><span>₹500</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CROP_NPK = {
+  "Rice": { n: 40, p: 20, k: 20, noteKey: "fert.note.rice", i18nKey: "fert.crop.rice" },
+  "Wheat": { n: 45, p: 20, k: 20, noteKey: "fert.note.wheat", i18nKey: "fert.crop.wheat" },
+  "Maize": { n: 50, p: 25, k: 25, noteKey: "fert.note.maize", i18nKey: "fert.crop.maize" },
+  "Tomato": { n: 60, p: 30, k: 40, noteKey: "fert.note.tomato", i18nKey: "fert.crop.tomato" },
+  "Potato": { n: 65, p: 30, k: 50, noteKey: "fert.note.potato", i18nKey: "fert.crop.potato" },
+  "Cotton": { n: 50, p: 25, k: 25, noteKey: "fert.note.cotton", i18nKey: "fert.crop.cotton" },
+};
+
+const SOIL_FACTORS = {
+  "Loam": 1.0,
+  "Clay": 0.9,
+  "Sandy": 1.1,
+};
+
+const PRICE = {
+  urea: 266.5,
+  dap: 1350,
+  mop: 1700,
+  ssp: 500,
+};
+
+function getDict() {
+  return window.getI18nDict ? window.getI18nDict() : (window.I18N?.English || {});
+}
+
+function runCalc() {
+  const dict = getDict();
+  const crop = document.getElementById('cropSelect').value;
+  const soil = document.getElementById('soilSelect').value;
+  const area = parseFloat(document.getElementById('areaInput').value || '0');
+  const target = parseFloat(document.getElementById('yieldInput').value || '0');
+  if (!area || area <= 0) { alert(dict['fert.error.area'] || 'Enter area'); return; }
+  const base = CROP_NPK[crop];
+  let factor = SOIL_FACTORS[soil] || 1.0;
+  if (target && target > 0) {
+    const bump = Math.min(1.25, 0.85 + (target / 6));
+    factor *= bump;
+  }
+  const needN = +(base.n * factor * area).toFixed(1);
+  const needP = +(base.p * factor * area).toFixed(1);
+  const needK = +(base.k * factor * area).toFixed(1);
+
+  // Allocate P via DAP, then N via Urea, K via MOP. SSP optional note.
+  const kgDap = +(needP / 0.46).toFixed(2);
+  const nFromDap = kgDap * 0.18;
+  const nRemaining = Math.max(0, needN - nFromDap);
+  const kgUrea = +(nRemaining / 0.46).toFixed(2);
+  const kgMop = +(needK / 0.60).toFixed(2);
+
+  const bags = (kg, bagKg) => +(kg / bagKg).toFixed(2);
+  const bagsDap = bags(kgDap, 50);
+  const bagsUrea = bags(kgUrea, 45);
+  const bagsMop = bags(kgMop, 50);
+
+  const cost = Math.round(bagsUrea * PRICE.urea + bagsDap * PRICE.dap + bagsMop * PRICE.mop);
+
+  const cropLabel = dict[base.i18nKey] || crop;
+  const soilLabel = dict[`fert.soil.${soil.toLowerCase()}`] || soil;
+
+  document.getElementById('npkNeed').textContent = `${needN} N / ${needP} P2O5 / ${needK} K2O kg`;
+  document.getElementById('productMix').textContent = `${bagsUrea} ${dict['fert.word.bags'] || 'bags'} ${dict['fert.product.urea'] || 'Urea'}, ${bagsDap} ${dict['fert.word.bags'] || 'bags'} ${dict['fert.product.dap'] || 'DAP'}, ${bagsMop} ${dict['fert.word.bags'] || 'bags'} ${dict['fert.product.mop'] || 'MOP'}`;
+  const costText = (dict['fert.cost.text'] || '≈ ₹{cost} for {area} acre')
+    .replace('{cost}', cost.toLocaleString())
+    .replace('{area}', area);
+  document.getElementById('costEst').textContent = costText;
+
+  document.getElementById('splitPlan').textContent = dict['fert.split.text'] || 'Basal: 50% N + 100% P + 50% K. Topdress N at 30-35 DAS and panicle/flowering.';
+  document.getElementById('notes').textContent = `${cropLabel}: ${dict[base.noteKey] || base.notes} | ${dict['fert.input.soil'] || 'Soil'}: ${soilLabel}. ${dict['fert.ssp.note'] || ''}`.trim();
+
+  document.getElementById('calcResults').style.display = 'block';
+}
+
+function resetCalc() {
+  document.getElementById('areaInput').value = 1;
+  document.getElementById('yieldInput').value = '';
+  document.getElementById('soilSelect').value = 'Loam';
+  document.getElementById('cropSelect').value = 'Rice';
+  document.getElementById('calcResults').style.display = 'none';
+}
+
+// Re-render outputs when language changes
+window.addEventListener('lang:changed', () => {
+  const card = document.getElementById('calcResults');
+  if (card && card.style.display !== 'none') {
+    runCalc();
+  }
+});
+</script>
+</body>
+</html>

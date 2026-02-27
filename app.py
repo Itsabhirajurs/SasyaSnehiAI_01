@@ -14,7 +14,7 @@ from config import Config
 from model.model_loader import DiseaseModelService
 from services.advisory import generate_advisory
 from services.chemical_safety import ChemicalSafetyService
-from services.geocoding import reverse_geocode, get_nearby_shops
+from services.geocoding import reverse_geocode
 from services.govt_schemes import get_schemes
 from services.llm_service import LLMService
 from services.market_price import get_market_prices
@@ -22,12 +22,22 @@ from services.severity import estimate_severity
 from services.translation import translate
 from services.weather import get_environment_risk
 from services.weather_forecast import get_forecast
+from services.supabase_client import verify_token
 import community_db
 
 
 app = Flask(__name__)
 app.config.from_object(Config)
 app.secret_key = app.config["SECRET_KEY"]
+
+
+@app.context_processor
+def inject_public_keys():
+    return {
+        "SUPABASE_URL": app.config.get("SUPABASE_URL", ""),
+        "SUPABASE_ANON_KEY": app.config.get("SUPABASE_ANON_KEY", ""),
+        "SUPABASE_PUBLISHABLE_KEY": app.config.get("SUPABASE_PUBLISHABLE_KEY", ""),
+    }
 
 @app.template_filter('nl2br')
 def nl2br_filter(value: str) -> Markup:
@@ -41,6 +51,21 @@ community_db.init_db(app.config["COMMUNITY_DB"])
 model_service = DiseaseModelService(app.config["MODEL_PATH"], app.config["CLASS_MAP_PATH"])
 chemical_service = ChemicalSafetyService(str(Path(__file__).parent / "data" / "chemical_db.json"))
 llm_service = LLMService(app.config["GEMINI_API_KEY"], app.config["GEMINI_MODEL"])
+
+
+@app.route("/translate-test")
+def translate_test():
+    """Lightweight health+translation probe for LibreTranslate."""
+    text = request.args.get("q", "Welcome to Sashyasnehi AI")
+    target = request.args.get("lang", "hi")
+    translated = translate(
+        text,
+        target_lang=target,
+        source_lang="en",
+        base_url=app.config["LIBRETRANSLATE_URL"],
+        api_key=app.config["LIBRETRANSLATE_API_KEY"],
+    )
+    return {"original": text, "translated": translated, "target": target}
 
 
 def _split_chemicals(raw: str) -> list[str]:
@@ -72,6 +97,21 @@ def _maps_link(query: str, latitude: float | None, longitude: float | None) -> s
     return f"https://www.google.com/maps/search/{query}"
 
 
+def _extract_token() -> str:
+    auth = request.headers.get("Authorization", "")
+    if auth.lower().startswith("bearer "):
+        return auth.split(" ", 1)[1].strip()
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+        tok = data.get("supabase_token")
+        if tok:
+            return str(tok)
+    tok = request.form.get("supabase_token")
+    if tok:
+        return str(tok)
+    return ""
+
+
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -80,6 +120,17 @@ def home():
 @app.route("/about")
 def about():
     return render_template("info.html")
+
+
+@app.route("/tools/fertilizer")
+def fertilizer_calculator():
+    return render_template("fertilizer.html")
+
+
+@app.route("/tools/cultivation")
+def cultivation_tips():
+    crop = request.args.get("crop", "")
+    return render_template("cultivation.html", selected_crop=crop)
 
 
 @app.route("/upload")
@@ -212,10 +263,6 @@ def analyze():
                                app.config.get("DATA_GOV_API_KEY", ""),
                                app.config.get("ALPHA_VANTAGE_KEY", ""))
 
-    # ── NEW: Nearby agri shops ───────────────────────────────────────────────
-    nearby_shops = get_nearby_shops(latitude, longitude, app.config.get("GOOGLE_MAPS_API_KEY", ""),
-                                    f"pesticide fertilizer {plant_name} shop")
-
     # ── NEW: Similar community posts ────────────────────────────────────────
     similar_posts = community_db.get_similar_posts(plant_name, disease_name, limit=4)
 
@@ -241,7 +288,6 @@ def analyze():
         forecast=forecast,
         schemes=schemes,
         market=market,
-        nearby_shops=nearby_shops,
         similar_posts=similar_posts,
     )
 
@@ -295,6 +341,12 @@ def community():
 @app.route("/community/new", methods=["GET", "POST"])
 def community_new():
     if request.method == "POST":
+        token = _extract_token()
+        user = verify_token(token, app.config.get("SUPABASE_URL", ""), app.config.get("SUPABASE_ANON_KEY", ""))
+        if not user or not user.get("id"):
+            return render_template("community_new.html",
+                                   error="Please sign in before posting.")
+
         title = request.form.get("title", "").strip()
         body = request.form.get("body", "").strip()
         plant = request.form.get("plant", "").strip()
@@ -304,13 +356,26 @@ def community_new():
         author = request.form.get("author", "Anonymous").strip() or "Anonymous"
         tags = request.form.get("tags", "").strip()
 
+        # Ensure profile exists and use profile name for author display
+        profile = community_db.get_profile(user["id"]) or {}
+        if not profile:
+            profile = community_db.upsert_profile(
+                user["id"],
+                email=user.get("email", ""),
+                full_name=author,
+                state=state,
+                major_crop="",
+            )
+        display_name = profile.get("full_name") or profile.get("email") or author
+
         if not title or not body:
             return render_template("community_new.html",
                                    error="Title and description are required.")
 
         post_id = community_db.create_post(title=title, body=body, plant=plant,
                                            disease=disease, location=location,
-                                           state=state, author=author, tags=tags)
+                                           state=state, author=display_name, tags=tags,
+                                           supabase_user_id=user.get("id", ""))
         return redirect(url_for("community_post", post_id=post_id))
 
     # Pre-fill from query params (when coming from result page)
@@ -338,25 +403,35 @@ def community_reply():
     payload = request.get_json(silent=True) or {}
     post_id = int(payload.get("post_id", 0))
     body = str(payload.get("body", "")).strip()
-    author = str(payload.get("author", "Anonymous")).strip() or "Anonymous"
+    token = _extract_token()
+    user = verify_token(token, app.config.get("SUPABASE_URL", ""), app.config.get("SUPABASE_ANON_KEY", ""))
 
     if not post_id or not body:
         return jsonify({"error": "post_id and body required"}), 400
+    if not user or not user.get("id"):
+        return jsonify({"error": "Auth required"}), 401
 
-    reply_id = community_db.add_reply(post_id, body, author)
+    profile = community_db.get_profile(user["id"]) or {}
+    author = profile.get("full_name") or profile.get("email") or "Anonymous"
+
+    reply_id = community_db.add_reply(post_id, body, author, supabase_user_id=user.get("id", ""))
     replies = community_db.get_replies(post_id)
     reply = next((r for r in replies if r["id"] == reply_id), None)
-    return jsonify({"ok": True, "reply": reply})
+    return jsonify({"success": True, "reply": reply})
 
 
 @app.route("/community/vote_post", methods=["POST"])
 def community_vote_post():
     payload = request.get_json(silent=True) or {}
     post_id = int(payload.get("post_id", 0))
-    voter = str(payload.get("voter", request.remote_addr or "anon"))
+    token = _extract_token()
+    user = verify_token(token, app.config.get("SUPABASE_URL", ""), app.config.get("SUPABASE_ANON_KEY", ""))
     if not post_id:
         return jsonify({"error": "post_id required"}), 400
-    result = community_db.vote_post(post_id, voter)
+    if not user or not user.get("id"):
+        return jsonify({"error": "Auth required"}), 401
+    result = community_db.vote_post(post_id, user.get("id", ""))
+    result["success"] = True
     return jsonify(result)
 
 
@@ -364,10 +439,14 @@ def community_vote_post():
 def community_vote_reply():
     payload = request.get_json(silent=True) or {}
     reply_id = int(payload.get("reply_id", 0))
-    voter = str(payload.get("voter", request.remote_addr or "anon"))
+    token = _extract_token()
+    user = verify_token(token, app.config.get("SUPABASE_URL", ""), app.config.get("SUPABASE_ANON_KEY", ""))
     if not reply_id:
         return jsonify({"error": "reply_id required"}), 400
-    result = community_db.vote_reply(reply_id, voter)
+    if not user or not user.get("id"):
+        return jsonify({"error": "Auth required"}), 401
+    result = community_db.vote_reply(reply_id, user.get("id", ""))
+    result["success"] = True
     return jsonify(result)
 
 
@@ -376,9 +455,64 @@ def community_solve():
     payload = request.get_json(silent=True) or {}
     reply_id = int(payload.get("reply_id", 0))
     post_id = int(payload.get("post_id", 0))
+    token = _extract_token()
+    user = verify_token(token, app.config.get("SUPABASE_URL", ""), app.config.get("SUPABASE_ANON_KEY", ""))
+    if not user or not user.get("id"):
+        return jsonify({"error": "Auth required"}), 401
     if reply_id and post_id:
         community_db.mark_solution(reply_id, post_id)
-    return jsonify({"ok": True})
+    return jsonify({"success": True})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PROFILE APIs (Supabase-authenticated)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@app.route("/api/profile/me", methods=["GET"])
+def api_profile_me():
+    token = _extract_token()
+    user = verify_token(token, app.config.get("SUPABASE_URL", ""), app.config.get("SUPABASE_ANON_KEY", ""))
+    if not user or not user.get("id"):
+        return jsonify({"error": "Auth required"}), 401
+    profile = community_db.get_profile(user["id"])
+    if not profile:
+        profile = community_db.upsert_profile(
+            user["id"],
+            email=user.get("email", ""),
+            full_name=(user.get("metadata") or {}).get("full_name", ""),
+            language=(user.get("metadata") or {}).get("language", ""),
+        )
+    return jsonify({
+        "profile": profile,
+        "user": {
+            "id": user.get("id"),
+            "email": user.get("email"),
+            "phone": user.get("phone"),
+            "metadata": user.get("metadata", {}),
+        },
+    })
+
+
+@app.route("/api/profile/update", methods=["POST"])
+def api_profile_update():
+    token = _extract_token()
+    user = verify_token(token, app.config.get("SUPABASE_URL", ""), app.config.get("SUPABASE_ANON_KEY", ""))
+    if not user or not user.get("id"):
+        return jsonify({"error": "Auth required"}), 401
+    payload = request.get_json(silent=True) or {}
+    profile = community_db.upsert_profile(
+        user["id"],
+        email=user.get("email", ""),
+        full_name=str(payload.get("full_name", "")).strip(),
+        state=str(payload.get("state", "")).strip(),
+        district=str(payload.get("district", "")).strip(),
+        taluk=str(payload.get("taluk", "")).strip(),
+        major_crop=str(payload.get("major_crop", "")).strip(),
+        phone=str(payload.get("phone", "")).strip(),
+        language=str(payload.get("language", "")).strip(),
+    )
+    return jsonify({"success": True, "profile": profile})
 
 
 # ─────────────────────────────────────────────────────────────────────────────

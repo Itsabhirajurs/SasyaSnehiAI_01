@@ -355,6 +355,12 @@ a:hover{text-decoration:underline;}
 .reply-body{font-size:0.93rem;color:var(--text);line-height:1.7;margin-bottom:8px;}
 .reply-meta{font-size:0.75rem;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
 
+/* Chips */
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:0.8rem;font-weight:700;letter-spacing:0.03em;border:1px solid transparent;}
+.chip-success{background:#e6f4ea;color:#1a6b1a;border-color:#b8dfc8;}
+.chip-info{background:#e8f0fe;color:#1a4e8a;border-color:#b8cff5;}
+.chip-soft{background:var(--bg2);color:var(--muted);border-color:#dcebd8;}
+
 /* ── Market Analysis Page ─────────────────────────────── */
 .market-hero{background:linear-gradient(135deg,#1e6b3c,#3aa563);color:#fff;border-radius:16px;padding:32px;margin-bottom:24px;}
 .market-hero h2{font-size:1.5rem;font-weight:800;margin-bottom:6px;}
@@ -371,6 +377,24 @@ a:hover{text-decoration:underline;}
 
 /* Post form */
 .form-new-post .form-group textarea{min-height:130px;resize:vertical;}
+
+/* ── Fertilizer Calculator Page ───────────────────────── */
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:14px;}
+.fert-table-wrap{margin-top:18px;}
+.table-title{font-size:0.86rem;color:var(--muted);margin-bottom:6px;}
+.fert-table{border:1px solid #e0eadd;border-radius:10px;overflow:hidden;}
+.ft-row{display:grid;grid-template-columns:1.2fr 0.7fr 0.7fr 1fr;align-items:center;padding:10px 12px;font-size:0.9rem;gap:8px;}
+.ft-head{background:var(--bg2);font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;font-size:0.78rem;}
+.ft-row:not(.ft-head){border-top:1px solid #e0eadd;}
+
+/* ── Cultivation Tips Page ───────────────────────────── */
+.cult-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.cult-card{background:var(--card);border:1px solid #e0eadd;border-radius:12px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;}
+.cult-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.cult-crop{font-size:1rem;font-weight:800;color:var(--accent-dark);} 
+.cult-region{font-size:0.82rem;color:var(--muted);} 
+.cult-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;font-size:0.9rem;color:var(--text);} 
+.cult-list li strong{color:var(--accent-dark);} 
 
 /* Responsive updates for new features */
 @media(max-width:768px){

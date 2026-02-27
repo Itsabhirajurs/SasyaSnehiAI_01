@@ -15,32 +15,40 @@
       <span class="leaf">&#127807;</span> Sashyasnehi AI
     </a>
     <ul class="nav-links">
-      <li><a href="{{ url_for('home') }}">Home</a></li>
-      <li><a href="{{ url_for('community') }}">Community</a></li>
-      <li><a href="{{ url_for('market_page') }}">Market</a></li>
-      <li><a href="{{ url_for('about') }}">About</a></li>
-      <li><button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle dark mode">&#127769;</button></li>
-      <li><a href="{{ url_for('upload') }}" class="btn-nav active">Analyze Crop</a></li>
+      <li><a href="{{ url_for('home') }}" data-i18n="nav.home">Home</a></li>
+      <li><a href="{{ url_for('community') }}" data-i18n="nav.community">Community</a></li>
+      <li><a href="{{ url_for('market_page') }}" data-i18n="nav.market">Market</a></li>
+      <li><a href="{{ url_for('fertilizer_calculator') }}" data-i18n="nav.fertilizer">Fertilizer</a></li>
+      <li><a href="{{ url_for('cultivation_tips') }}" data-i18n="nav.cultivation">Cultivation</a></li>
+      <li><a href="{{ url_for('about') }}" data-i18n="nav.about">About</a></li>
+      <li>
+        <select class="lang-select lang-switcher" title="Switch language">
+          <option value="English">English</option>
+          <option value="Hindi">Hindi</option>
+          <option value="Kannada">Kannada</option>
+        </select>
+      </li>
+      <li><a href="{{ url_for('upload') }}" class="btn-nav active" data-i18n="nav.analyze">Analyze Crop</a></li>
     </ul>
   </nav>
 
   <div class="page-wrap">
 
     <div class="page-header">
-      <h2>Analyze Your Crop</h2>
-      <p>Upload a leaf image and fill in your farm details for a complete AI advisory.</p>
+      <h2 data-i18n="upload.h1">Analyze Your Crop</h2>
+      <p data-i18n="upload.h1-sub">Upload a leaf image and fill in your farm details for a complete AI advisory.</p>
     </div>
 
     <form action="{{ url_for('analyze') }}" method="post" enctype="multipart/form-data">
 
       <!-- IMAGE SECTION -->
       <div class="form-section">
-        <div class="form-section-title">Crop Image *</div>
+        <div class="form-section-title" data-i18n="upload.image-title">Crop Image *</div>
         <div class="drop-zone" id="drop-zone">
           <input type="file" name="image" accept="image/*" id="img-input" required>
           <span class="drop-icon">+</span>
-          <p><strong>Click to browse</strong> or drag &amp; drop your leaf image here</p>
-          <p style="font-size:0.78rem;margin-top:4px;opacity:0.7;">JPG, PNG, WEBP — max 10 MB</p>
+          <p><strong data-i18n="upload.drop-browse">Click to browse</strong> <span data-i18n="upload.drop-or">or drag &amp; drop your leaf image here</span></p>
+          <p style="font-size:0.78rem;margin-top:4px;opacity:0.7;" data-i18n="upload.drop-note">JPG, PNG, WEBP — max 10 MB</p>
         </div>
         <div id="img-preview-wrap">
           <img id="img-preview" src="" alt="Preview">
@@ -49,28 +57,28 @@
 
       <!-- FARM CONTEXT -->
       <div class="form-section">
-        <div class="form-section-title">Farm Details</div>
+        <div class="form-section-title" data-i18n="upload.farm">Farm Details</div>
         <div class="form-row">
           <div class="form-group">
-            <label>Soil Type</label>
+            <label data-i18n="upload.soil">Soil Type</label>
             <select name="soil_type">
-              <option value="">— Select —</option>
-              <option value="Clay">Clay</option>
-              <option value="Sandy">Sandy</option>
-              <option value="Loamy">Loamy</option>
-              <option value="Silty">Silty</option>
+              <option value="" data-i18n="upload.select">— Select —</option>
+              <option value="Clay" data-i18n="upload.soil-clay">Clay</option>
+              <option value="Sandy" data-i18n="upload.soil-sandy">Sandy</option>
+              <option value="Loamy" data-i18n="upload.soil-loamy">Loamy</option>
+              <option value="Silty" data-i18n="upload.soil-silty">Silty</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Watering Frequency</label>
-            <input type="text" name="watering_frequency" placeholder="e.g., daily / 3× a week">
+            <label data-i18n="upload.watering">Watering Frequency</label>
+            <input type="text" name="watering_frequency" placeholder="e.g., daily / 3× a week" data-i18n="upload.watering-ph">
           </div>
           <div class="form-group">
-            <label>Tilling Information <span style="opacity:0.5">(optional)</span></label>
-            <input type="text" name="tilling_info" placeholder="e.g., deep ploughing monthly">
+            <label><span data-i18n="upload.tilling">Tilling Information</span> <span style="opacity:0.5" data-i18n="upload.optional">(optional)</span></label>
+            <input type="text" name="tilling_info" placeholder="e.g., deep ploughing monthly" data-i18n="upload.tilling-ph">
           </div>
           <div class="form-group">
-            <label>Preferred Language</label>
+            <label data-i18n="upload.language">Preferred Language</label>
             <select name="language">
               {% for lang in languages %}
                 <option value="{{ lang }}">{{ lang }}</option>
@@ -82,32 +90,32 @@
 
       <!-- CHEMICALS -->
       <div class="form-section">
-        <div class="form-section-title">Previously Used Chemicals</div>
+        <div class="form-section-title" data-i18n="upload.chems">Previously Used Chemicals</div>
         <div class="form-group">
-          <label>Chemical Names <span style="opacity:0.5">(comma-separated, optional)</span></label>
-          <textarea name="chemicals" rows="2" placeholder="e.g., chlorpyrifos, imidacloprid, glyphosate"></textarea>
+          <label><span data-i18n="upload.chems-label">Chemical Names</span> <span style="opacity:0.5" data-i18n="upload.comma-opt">(comma-separated, optional)</span></label>
+          <textarea name="chemicals" rows="2" placeholder="e.g., chlorpyrifos, imidacloprid, glyphosate" data-i18n="upload.chems-ph"></textarea>
         </div>
         <div class="form-group" style="margin-top:12px;">
-          <label>Soil Test Results <span style="opacity:0.5">(optional)</span></label>
-          <textarea name="soil_test_info" rows="2" placeholder="e.g., pH 6.5, NPK 120-60-40, EC 0.8 dS/m"></textarea>
+          <label><span data-i18n="upload.soiltest">Soil Test Results</span> <span style="opacity:0.5" data-i18n="upload.optional">(optional)</span></label>
+          <textarea name="soil_test_info" rows="2" placeholder="e.g., pH 6.5, NPK 120-60-40, EC 0.8 dS/m" data-i18n="upload.soiltest-ph"></textarea>
         </div>
       </div>
 
       <!-- LOCATION -->
       <div class="form-section">
-        <div class="form-section-title">Location (for weather risk)</div>
+        <div class="form-section-title" data-i18n="upload.location">Location (for weather risk)</div>
         <input type="hidden" name="latitude" id="latitude">
         <input type="hidden" name="longitude" id="longitude">
         <div class="location-row">
-          <button type="button" class="btn-secondary" onclick="captureLocation()">Use My Location</button>
-          <span id="location-status">Location not captured — weather risk will use defaults.</span>
+          <button type="button" class="btn-secondary" onclick="captureLocation()" data-i18n="upload.use-location">Use My Location</button>
+          <span id="location-status" data-i18n="upload.loc-status">Location not captured — weather risk will use defaults.</span>
         </div>
       </div>
 
       <!-- SUBMIT -->
       <div class="form-actions">
-        <a href="{{ url_for('home') }}" class="btn-secondary">← Back</a>
-        <button type="submit" class="btn">Run Analysis</button>
+        <a href="{{ url_for('home') }}" class="btn-secondary" data-i18n="upload.back">← Back</a>
+        <button type="submit" class="btn" data-i18n="upload.run">Run Analysis</button>
       </div>
 
     </form>
@@ -147,30 +155,34 @@
     }
 
     // Geolocation
+    const currentLang = localStorage.getItem('lang') || 'English';
+    const geoDict = (window.getI18nDict && window.getI18nDict(currentLang)) || (window.I18N && window.I18N[currentLang]) || {};
+    const t = (key, fallback) => (geoDict && geoDict[key]) || (window.I18N && window.I18N['English'] && window.I18N['English'][key]) || fallback || key;
+
     async function captureLocation() {
       const status = document.getElementById('location-status');
       if (!navigator.geolocation) {
-        status.textContent = 'Geolocation not supported in this browser.';
+        status.textContent = t('upload.geo-not-supported','Geolocation not supported in this browser.');
         return;
       }
-      status.textContent = 'Detecting location…';
+      status.textContent = t('upload.geo-detecting','Detecting location…');
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
           const lat = pos.coords.latitude;
           const lon = pos.coords.longitude;
           document.getElementById('latitude').value = lat;
           document.getElementById('longitude').value = lon;
-          status.textContent = `✔ Coordinates captured (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+          status.textContent = `${t('upload.geo-captured','✔ Coordinates captured')} (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
           // Try to get a human-readable address
           try {
             const r = await fetch(`/api/geocode?lat=${lat}&lon=${lon}`);
             const d = await r.json();
             if (d.address) {
-              status.innerHTML = `✔ Location: <strong>${d.address}</strong>`;
+              status.innerHTML = `${t('upload.geo-address','✔ Location:')} <strong>${d.address}</strong>`;
             }
           } catch(e) {}
         },
-        () => { status.textContent = 'Unable to get location. Continuing without it.'; }
+        () => { status.textContent = t('upload.geo-fail','Unable to get location. Continuing without it.'); }
       );
     }
   </script>

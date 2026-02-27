@@ -1,7 +1,8 @@
-"""Translation service using LibreTranslate (free, no key required for basic use)."""
+"""Translation service using LibreTranslate (self-hosted or public)."""
 
 from __future__ import annotations
 
+import os
 import requests
 
 # Language codes supported
@@ -11,16 +12,18 @@ LANG_CODES = {
     "Kannada": "kn",
 }
 
-# LibreTranslate public endpoints (try in order)
+# LibreTranslate endpoints (local first if provided, then public fallbacks)
+ENV_BASE_URL = os.getenv("LIBRETRANSLATE_URL", "http://localhost:5001")
+ENV_API_KEY = os.getenv("LIBRETRANSLATE_API_KEY", "")
+
 LT_ENDPOINTS = [
-    "https://libretranslate.de",
-    "https://translate.argosopentech.com",
-    "https://libretranslate.com",
+    endpoint for endpoint in [ENV_BASE_URL, "https://libretranslate.de", "https://translate.argosopentech.com", "https://libretranslate.com"]
+    if endpoint
 ]
 
 
 def translate(text: str, target_lang: str, source_lang: str = "en",
-              api_key: str = "", base_url: str = "") -> str:
+              api_key: str | None = None, base_url: str | None = None) -> str:
     """
     Translate text using LibreTranslate.
     Falls back to original text if translation unavailable.
@@ -32,7 +35,13 @@ def translate(text: str, target_lang: str, source_lang: str = "en",
     if lang_code == "en":
         return text
 
-    endpoints = [base_url] + LT_ENDPOINTS if base_url else LT_ENDPOINTS
+    resolved_base = base_url if base_url is not None else ENV_BASE_URL
+    resolved_key = api_key if api_key is not None else ENV_API_KEY
+
+    endpoints = []
+    if resolved_base:
+        endpoints.append(resolved_base)
+    endpoints.extend([e for e in LT_ENDPOINTS if e not in endpoints])
 
     for endpoint in endpoints:
         try:
@@ -43,8 +52,8 @@ def translate(text: str, target_lang: str, source_lang: str = "en",
                 "target": lang_code,
                 "format": "text",
             }
-            if api_key:
-                payload["api_key"] = api_key
+            if resolved_key:
+                payload["api_key"] = resolved_key
 
             resp = requests.post(url, json=payload, timeout=10)
             data = resp.json()

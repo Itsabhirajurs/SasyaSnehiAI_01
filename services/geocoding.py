@@ -11,7 +11,15 @@ def reverse_geocode(lat: float, lon: float, api_key: str) -> dict:
     Returns dict with keys: address, city, state, country, district
     Falls back to coordinates string if API unavailable.
     """
-    if not api_key or lat is None or lon is None:
+    if lat is None or lon is None:
+        return {
+            "address": "Location unavailable",
+            "city": None,
+            "state": None,
+            "district": None,
+            "country": "India",
+        }
+    if not api_key:
         return {
             "address": f"{lat:.4f}, {lon:.4f}",
             "city": None,

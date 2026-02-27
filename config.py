@@ -31,12 +31,17 @@ class Config:
     # Get a free key at: https://www.alphavantage.co/support/#api-key
     ALPHA_VANTAGE_KEY = os.getenv("ALPHA_VANTAGE_KEY", "")
 
-    # LibreTranslate endpoint (free, no key needed for public instance)
-    LIBRETRANSLATE_URL = os.getenv("LIBRETRANSLATE_URL", "https://libretranslate.com")
+    # LibreTranslate endpoint (self-hosted or public). Default points to local Docker.
+    LIBRETRANSLATE_URL = os.getenv("LIBRETRANSLATE_URL", "http://localhost:5001")
     LIBRETRANSLATE_API_KEY = os.getenv("LIBRETRANSLATE_API_KEY", "")
 
     # Community DB path
     COMMUNITY_DB = str(BASE_DIR / "community.db")
+
+    # Supabase (auth + profiles)
+    SUPABASE_URL = os.getenv("SUPABASE_URL", "https://sbulfymwlqubggmfhgsq.supabase.co")
+    SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
+    SUPABASE_PUBLISHABLE_KEY = os.getenv("SUPABASE_PUBLISHABLE_KEY", "")
 
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
     UPLOAD_FOLDER = str(BASE_DIR / "static" / "uploads")

@@ -6,34 +6,89 @@
   <title>Community Forum — Sashyasnehi AI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  <script>
+    window.SUPABASE_URL = "{{ SUPABASE_URL }}";
+    window.SUPABASE_ANON_KEY = "{{ SUPABASE_ANON_KEY }}";
+  </script>
+  <script type="module" src="{{ url_for('static', filename='auth.js') }}"></script>
 </head>
 <body>
 <nav class="navbar">
   <a class="nav-brand" href="{{ url_for('home') }}"><span class="leaf">&#127807;</span> Sashyasnehi AI</a>
   <ul class="nav-links">
-    <li><a href="{{ url_for('home') }}">Home</a></li>
-    <li><a href="{{ url_for('community') }}" class="active">Community</a></li>
-    <li><a href="{{ url_for('market_page') }}">Market</a></li>
-    <li><a href="{{ url_for('about') }}">About</a></li>
-    <li><button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle dark mode">&#127769;</button></li>
-    <li><a href="{{ url_for('upload') }}" class="btn-nav">Analyse Crop</a></li>
+    <li><a href="{{ url_for('home') }}" data-i18n="nav.home">Home</a></li>
+    <li><a href="{{ url_for('community') }}" class="active" data-i18n="nav.community">Community</a></li>
+    <li><a href="{{ url_for('market_page') }}" data-i18n="nav.market">Market</a></li>
+    <li><a href="{{ url_for('fertilizer_calculator') }}" data-i18n="nav.fertilizer">Fertilizer</a></li>
+    <li><a href="{{ url_for('cultivation_tips') }}" data-i18n="nav.cultivation">Cultivation</a></li>
+    <li><a href="{{ url_for('about') }}" data-i18n="nav.about">About</a></li>
+    <li>
+      <select class="lang-select lang-switcher" title="Switch language">
+        <option value="English">English</option>
+        <option value="Hindi">Hindi</option>
+        <option value="Kannada">Kannada</option>
+      </select>
+    </li>
+    <li><a href="{{ url_for('upload') }}" class="btn-nav" data-i18n="nav.analyze">Analyse Crop</a></li>
   </ul>
 </nav>
 
 <div class="page-wrap">
   <div class="community-header">
     <div>
-      <h2 style="font-size:1.6rem;font-weight:800;color:var(--accent-dark);margin-bottom:4px;">Farmer Community</h2>
-      <p style="color:var(--muted);font-size:0.9rem;">Discuss crop diseases, share experiences, and help each other.</p>
+      <h2 style="font-size:1.6rem;font-weight:800;color:var(--accent-dark);margin-bottom:4px;" data-i18n="community.title">Farmer Community</h2>
+      <p style="color:var(--muted);font-size:0.9rem;" data-i18n="community.sub">Discuss crop diseases, share experiences, and help each other.</p>
     </div>
-    <a href="{{ url_for('community_new') }}" class="btn">+ Ask a Question</a>
+    <a href="{{ url_for('community_new') }}" class="btn" id="askBtn" data-i18n="community.ask" onclick="return guardAsk();">+ Ask a Question</a>
+  </div>
+
+  <div class="card" id="authCard" style="margin-bottom:12px;">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;">
+      <div id="authStatus" style="font-weight:600;">Checking sign-in...</div>
+      <div id="authSignedOut" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <input id="authEmail" type="email" placeholder="Email" style="min-width:200px;">
+        <input id="authPassword" type="password" placeholder="Password (min 6)" style="min-width:160px;">
+        <button class="btn btn-sm" onclick="authSignup()">Sign up</button>
+        <button class="btn btn-outline btn-sm" onclick="authLogin()">Sign in</button>
+      </div>
+      <div id="authSignedIn" style="display:none;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span id="authUserEmail" style="color:var(--muted);"></span>
+        <button class="btn btn-sm" onclick="openProfileEditor()">Profile</button>
+        <button class="btn btn-outline btn-sm" onclick="authLogout()">Sign out</button>
+      </div>
+    </div>
+    <div id="profileEditor" style="display:none;margin-top:10px;">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full name</label>
+          <input id="profName" type="text" placeholder="Farmer name">
+        </div>
+        <div class="form-group">
+          <label>Major crop focus</label>
+          <input id="profCrop" type="text" placeholder="e.g., Tomato">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>State</label><input id="profState" type="text" placeholder="State"></div>
+        <div class="form-group"><label>District</label><input id="profDistrict" type="text" placeholder="District"></div>
+        <div class="form-group"><label>Taluk</label><input id="profTaluk" type="text" placeholder="Taluk"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Phone (optional)</label><input id="profPhone" type="text" placeholder="Phone"></div>
+        <div class="form-group"><label>Preferred language</label><input id="profLang" type="text" placeholder="English/Hindi/Kannada"></div>
+      </div>
+      <div class="form-actions" style="justify-content:flex-start;">
+        <button class="btn btn-sm" onclick="saveProfile()">Save profile</button>
+        <span id="profileSaveStatus" style="color:var(--muted);"></span>
+      </div>
+    </div>
   </div>
 
   <!-- Stats -->
   <div class="comm-stats">
-    <div class="comm-stat">&#128221; <strong>{{ stats.total_posts }}</strong> Posts</div>
-    <div class="comm-stat">&#128172; <strong>{{ stats.total_replies }}</strong> Replies</div>
-    <div class="comm-stat">&#10003; <strong>{{ stats.solved }}</strong> Solved</div>
+    <div class="comm-stat">&#128221; <strong>{{ stats.total_posts }}</strong> <span data-i18n="community.stat.posts">Posts</span></div>
+    <div class="comm-stat">&#128172; <strong>{{ stats.total_replies }}</strong> <span data-i18n="community.stat.replies">Replies</span></div>
+    <div class="comm-stat">&#10003; <strong>{{ stats.solved }}</strong> <span data-i18n="community.stat.solved">Solved</span></div>
     {% for crop,cnt in stats.top_crops %}
       <div class="comm-stat">&#127807; <strong>{{ crop }}</strong> {{ cnt }} posts</div>
     {% endfor %}
@@ -41,20 +96,20 @@
 
   <!-- Filters -->
   <form method="GET" class="comm-filters">
-    <input name="search" value="{{ request.args.get('search','') }}" placeholder="&#128269; Search discussions..." style="flex:1;min-width:200px;">
+    <input name="search" value="{{ request.args.get('search','') }}" placeholder="&#128269; Search discussions..." data-i18n="community.search" style="flex:1;min-width:200px;">
     <select name="plant">
-      <option value="">All Plants</option>
+      <option value="" data-i18n="community.allPlants">All Plants</option>
       {% for p in ['Tomato','Potato','Pepper','Apple','Corn','Wheat','Rice'] %}
         <option {% if request.args.get('plant') == p %}selected{% endif %}>{{ p }}</option>
       {% endfor %}
     </select>
     <select name="state">
-      <option value="">All States</option>
+      <option value="" data-i18n="community.allStates">All States</option>
       {% for s in ['Karnataka','Maharashtra','Andhra Pradesh','Telangana','Punjab','Tamil Nadu','Gujarat','Uttar Pradesh'] %}
         <option {% if request.args.get('state') == s %}selected{% endif %}>{{ s }}</option>
       {% endfor %}
     </select>
-    <button class="btn btn-sm" type="submit">Filter</button>
+    <button class="btn btn-sm" type="submit" data-i18n="community.filter">Filter</button>
   </form>
 
   <!-- Thread list -->
@@ -69,9 +124,9 @@
             {% if post.plant %}<span class="thread-tag">{{ post.plant }}</span>{% endif %}
             {% if post.disease %}<span class="thread-tag">{{ post.disease }}</span>{% endif %}
             {% if post.state %}<span>&#128205; {{ post.state }}</span>{% endif %}
-            <span>by {{ post.author }} &bull; {{ post.time_ago }}</span>
-            <span>&#128065; {{ post.views }} views</span>
-            {% if post.status == 'solved' %}<span class="thread-solved">&#10003; Solved</span>{% endif %}
+            <span><span data-i18n="community.by">by</span> {{ post.author }} &bull; {{ post.time_ago }}</span>
+            <span>&#128065; {{ post.views }} <span data-i18n="community.views">views</span></span>
+            {% if post.status == 'solved' %}<span class="thread-solved" data-i18n="community.solved">&#10003; Solved</span>{% endif %}
           </div>
           <div class="thread-actions">
             <button class="vote-btn {% if post.upvotes > 0 %}voted{% endif %}" 
@@ -79,7 +134,7 @@
               &#9650; {{ post.upvotes }}
             </button>
             <a href="{{ url_for('community_post', post_id=post.id) }}" style="color:var(--muted);">
-              &#128172; {{ post.reply_count }} replies
+              &#128172; {{ post.reply_count }} <span data-i18n="community.replies">replies</span>
             </a>
           </div>
         </div>
@@ -88,12 +143,12 @@
   {% else %}
     <div style="text-align:center;padding:60px 20px;color:var(--muted);">
       <p style="font-size:2rem;margin-bottom:12px;">&#127807;</p>
-      <p>No discussions yet. <a href="{{ url_for('community_new') }}">Start the first one!</a></p>
+      <p data-i18n="community.empty">No discussions yet. <a href="{{ url_for('community_new') }}">Start the first one!</a></p>
     </div>
   {% endif %}
 </div>
 
-<footer class="footer">Sashyasnehi AI &copy; 2025 &mdash; <a href="{{ url_for('home') }}">Home</a></footer>
+<footer class="footer"><span data-i18n="footer.text">Sashyasnehi AI &copy; 2025 · Built with Flask, TensorFlow &amp; Gemini</span> &mdash; <a href="{{ url_for('home') }}" data-i18n="footer.home">Home</a></footer>
 
 <script>
 const VISITOR_ID = 'visitor_' + Math.random().toString(36).slice(2,9);

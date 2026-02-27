@@ -15,12 +15,20 @@
       <span class="leaf">&#127807;</span> Sashyasnehi AI
     </a>
     <ul class="nav-links">
-      <li><a href="{{ url_for('home') }}">Home</a></li>
-      <li><a href="{{ url_for('community') }}">Community</a></li>
-      <li><a href="{{ url_for('market_page') }}">Market</a></li>
-      <li><a href="{{ url_for('about') }}" class="active">About</a></li>
-      <li><button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle dark mode">&#127769;</button></li>
-      <li><a href="{{ url_for('upload') }}" class="btn-nav">Analyze Crop</a></li>
+      <li><a href="{{ url_for('home') }}" data-i18n="nav.home">Home</a></li>
+      <li><a href="{{ url_for('community') }}" data-i18n="nav.community">Community</a></li>
+      <li><a href="{{ url_for('market_page') }}" data-i18n="nav.market">Market</a></li>
+      <li><a href="{{ url_for('fertilizer_calculator') }}" data-i18n="nav.fertilizer">Fertilizer</a></li>
+      <li><a href="{{ url_for('cultivation_tips') }}" data-i18n="nav.cultivation">Cultivation</a></li>
+      <li><a href="{{ url_for('about') }}" class="active" data-i18n="nav.about">About</a></li>
+      <li>
+        <select class="lang-select lang-switcher" title="Switch language">
+          <option value="English">English</option>
+          <option value="Hindi">Hindi</option>
+          <option value="Kannada">Kannada</option>
+        </select>
+      </li>
+      <li><a href="{{ url_for('upload') }}" class="btn-nav" data-i18n="nav.analyze">Analyze Crop</a></li>
     </ul>
   </nav>
 
@@ -28,21 +36,21 @@
 
     <!-- HERO -->
     <section class="about-hero">
-      <h1>About Sashyasnehi AI</h1>
-      <p>An intelligent, open-source crop advisory system for Indian farmers — built with transfer learning, real-time weather data and multilingual AI.</p>
+      <h1 data-i18n="about.title">About Sashyasnehi AI</h1>
+      <p data-i18n="about.tagline">An intelligent, open-source crop advisory system for Indian farmers — built with transfer learning, real-time weather data and multilingual AI.</p>
     </section>
 
     <!-- OVERVIEW -->
     <div class="card">
-      <h2>Project Overview</h2>
-      <p style="line-height:1.8;color:var(--muted);">
-        Sashyasnehi AI (meaning <em>"Friend of Crops"</em> in Odia) is a modular web-based advisory system that combines deep learning plant disease classification with contextual environmental risk, chemical safety analysis, and multilingual AI guidance. The goal is to put expert-level crop health analysis into the hands of every farmer — for free, in their language, with no technical knowledge required.
+      <h2 data-i18n="about.overview.title">Project Overview</h2>
+      <p style="line-height:1.8;color:var(--muted);" data-i18n="about.overview.body">
+        Sashyasnehi AI (meaning "Friend of Crops" in Odia) is a modular web-based advisory system that combines deep learning plant disease classification with contextual environmental risk, chemical safety analysis, and multilingual AI guidance. The goal is to put expert-level crop health analysis into the hands of every farmer — for free, in their language, with no technical knowledge required.
       </p>
     </div>
 
     <!-- TECH STACK -->
     <div class="card">
-      <h2>Technology Stack</h2>
+      <h2 data-i18n="about.tech.title">Technology Stack</h2>
       <div class="tech-stack">
         <span class="tech-chip">Python 3.12</span>
         <span class="tech-chip">Flask 3.1</span>
@@ -61,36 +69,36 @@
 
     <!-- AI MODEL -->
     <div class="card">
-      <h2>AI Model Architecture</h2>
-      <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;">
-        The disease classifier uses <strong>MobileNetV2</strong> as a frozen feature extractor (pretrained on ImageNet), with a custom classification head:
+      <h2 data-i18n="about.model.title">AI Model Architecture</h2>
+      <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;" data-i18n="about.model.desc">
+        The disease classifier uses MobileNetV2 as a frozen feature extractor (pretrained on ImageNet), with a custom classification head:
       </p>
       <ul class="module-list">
-        <li><span class="m-icon m-num">IN</span><span><strong>Input</strong>: 224x224 RGB leaf image, preprocessed with MobileNetV2 normalisation</span></li>
-        <li><span class="m-icon m-num">BK</span><span><strong>Base</strong>: MobileNetV2 frozen (87 layers, 2.2M params) — ImageNet weights</span></li>
-        <li><span class="m-icon m-num">HD</span><span><strong>Head</strong>: GlobalAveragePooling2D &rarr; Dropout(0.3) &rarr; Dense(128, ReLU) &rarr; Softmax(N)</span></li>
-        <li><span class="m-icon m-num">TR</span><span><strong>Training</strong>: Adam (lr=1e-4), categorical crossentropy, EarlyStopping + ReduceLROnPlateau</span></li>
-        <li><span class="m-icon m-num">CL</span><span><strong>Classes</strong>: Tomato Early/Late Blight, Potato Early/Late Blight, Pepper Bacterial Spot, Tomato Healthy</span></li>
+        <li><span class="m-icon m-num">IN</span><span data-i18n="about.model.step.in">Input: 224x224 RGB leaf image, preprocessed with MobileNetV2 normalisation</span></li>
+        <li><span class="m-icon m-num">BK</span><span data-i18n="about.model.step.bk">Base: MobileNetV2 frozen (87 layers, 2.2M params) — ImageNet weights</span></li>
+        <li><span class="m-icon m-num">HD</span><span data-i18n="about.model.step.hd">Head: GlobalAveragePooling2D → Dropout(0.3) → Dense(128, ReLU) → Softmax(N)</span></li>
+        <li><span class="m-icon m-num">TR</span><span data-i18n="about.model.step.tr">Training: Adam (lr=1e-4), categorical crossentropy, EarlyStopping + ReduceLROnPlateau</span></li>
+        <li><span class="m-icon m-num">CL</span><span data-i18n="about.model.step.cl">Classes: Tomato Early/Late Blight, Potato Early/Late Blight, Pepper Bacterial Spot, Tomato Healthy</span></li>
       </ul>
     </div>
 
     <!-- MODULES -->
     <div class="card">
-      <h2>System Modules</h2>
+      <h2 data-i18n="about.modules.title">System Modules</h2>
       <ul class="module-list">
-        <li><span class="m-icon m-num">01</span><span><strong>model_loader.py</strong> — Singleton TF model service, loads once, serves predictions</span></li>
-        <li><span class="m-icon m-num">02</span><span><strong>severity.py</strong> — HSV colour masking: yellow + brown + dark ranges &rarr; infected pixel percentage</span></li>
-        <li><span class="m-icon m-num">03</span><span><strong>weather.py</strong> — OpenWeather free-tier API: humidity, temperature, rain probability risk formula</span></li>
-        <li><span class="m-icon m-num">04</span><span><strong>chemical_safety.py</strong> — JSON knowledge base lookup: bee toxicity, soil microbe impact, human health risk</span></li>
-        <li><span class="m-icon m-num">05</span><span><strong>advisory.py</strong> — Rule-based engine: severity x risk x soil type &rarr; actionable treatment plan</span></li>
-        <li><span class="m-icon m-num">06</span><span><strong>llm_service.py</strong> — Google Gemini with auto-failover across 34 available models; offline fallback mode</span></li>
-        <li><span class="m-icon m-num">07</span><span><strong>app.py</strong> — Flask orchestration layer: routes, image save, module pipeline, JSON chat endpoint</span></li>
+        <li><span class="m-icon m-num">01</span><span data-i18n="about.modules.01">model_loader.py — Singleton TF model service, loads once, serves predictions</span></li>
+        <li><span class="m-icon m-num">02</span><span data-i18n="about.modules.02">severity.py — HSV colour masking: yellow + brown + dark ranges → infected pixel percentage</span></li>
+        <li><span class="m-icon m-num">03</span><span data-i18n="about.modules.03">weather.py — OpenWeather free-tier API: humidity, temperature, rain probability risk formula</span></li>
+        <li><span class="m-icon m-num">04</span><span data-i18n="about.modules.04">chemical_safety.py — JSON knowledge base lookup: bee toxicity, soil microbe impact, human health risk</span></li>
+        <li><span class="m-icon m-num">05</span><span data-i18n="about.modules.05">advisory.py — Rule-based engine: severity x risk x soil type → actionable treatment plan</span></li>
+        <li><span class="m-icon m-num">06</span><span data-i18n="about.modules.06">llm_service.py — Google Gemini with auto-failover across 34 available models; offline fallback mode</span></li>
+        <li><span class="m-icon m-num">07</span><span data-i18n="about.modules.07">app.py — Flask orchestration layer: routes, image save, module pipeline, JSON chat endpoint</span></li>
       </ul>
     </div>
 
     <!-- DISEASE CLASSES -->
     <div class="card">
-      <h2>Supported Crop Diseases</h2>
+      <h2 data-i18n="about.diseases.title">Supported Crop Diseases</h2>
       <div class="features-grid" style="margin-bottom:0;">
         <div class="feature-card">
           <span class="feature-icon">T-EB</span>
@@ -127,24 +135,25 @@
 
     <!-- DATA & PRIVACY -->
     <div class="card">
-      <h2>Data &amp; Privacy</h2>
-      <p style="color:var(--muted);line-height:1.8;">
-        Uploaded images are stored locally in <code>static/uploads/</code> and are not transmitted to any external server. Location data (if provided) is used only for a single OpenWeather API call during the analysis request and is not stored. API keys are kept in a local <code>.env</code> file and never exposed in the browser.
+      <h2 data-i18n="about.data.title">Data &amp; Privacy</h2>
+      <p style="color:var(--muted);line-height:1.8;" data-i18n="about.data.body">
+        Uploaded images are stored locally in static/uploads/ and are not transmitted to any external server. Location data (if provided) is used only for a single OpenWeather API call during the analysis request and is not stored. API keys are kept in a local .env file and never exposed in the browser.
       </p>
     </div>
 
     <!-- CTA -->
     <div style="text-align:center;margin-top:12px;">
-      <a class="btn" href="{{ url_for('upload') }}" style="font-size:1rem;padding:12px 32px;">Try It Now</a>
+      <a class="btn" href="{{ url_for('upload') }}" style="font-size:1rem;padding:12px 32px;" data-i18n="about.cta.try">Try It Now</a>
       &nbsp;&nbsp;
-      <a class="btn-secondary" href="{{ url_for('home') }}" style="font-size:0.95rem;padding:11px 22px;">&larr; Back to Home</a>
+      <a class="btn-secondary" href="{{ url_for('home') }}" style="font-size:0.95rem;padding:11px 22px;" data-i18n="about.cta.back">&larr; Back to Home</a>
     </div>
 
   </div><!-- /page-wrap -->
 
   <footer class="footer">
-    Sashyasnehi AI &copy; 2025 &nbsp;&middot;&nbsp; Built with Flask, TensorFlow &amp; Gemini &nbsp;&middot;&nbsp;
-    <a href="{{ url_for('home') }}">Home</a>
+    <span data-i18n="about.footer">Sashyasnehi AI © 2025 · Built with Flask, TensorFlow & Gemini</span>
+    &nbsp;&middot;&nbsp;
+    <a href="{{ url_for('home') }}" data-i18n="nav.home">Home</a>
   </footer>
 
 </body>

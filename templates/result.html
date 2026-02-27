@@ -19,16 +19,18 @@
       <li><a href="{{ url_for('home') }}" data-i18n="nav.home">Home</a></li>
       <li><a href="{{ url_for('community') }}" data-i18n="nav.community">Community</a></li>
       <li><a href="{{ url_for('market_page') }}?crop={{ plant_name }}" data-i18n="nav.market">Market</a></li>
+      <li><a href="{{ url_for('fertilizer_calculator') }}" data-i18n="nav.fertilizer">Fertilizer</a></li>
+      <li><a href="{{ url_for('cultivation_tips') }}" data-i18n="nav.cultivation">Cultivation</a></li>
       <li><a href="{{ url_for('about') }}" data-i18n="nav.about">About</a></li>
       <li>
-        <select id="langSwitcher" class="lang-select" title="Switch language">
+        <select id="langSwitcher" class="lang-select lang-switcher" title="Switch language">
           <option value="English" {% if language == 'English' %}selected{% endif %}>English</option>
           <option value="Hindi" {% if language == 'Hindi' %}selected{% endif %}>Hindi</option>
           <option value="Kannada" {% if language == 'Kannada' %}selected{% endif %}>Kannada</option>
         </select>
       </li>
       <li><button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle dark mode">&#127769;</button></li>
-      <li><a href="{{ url_for('upload') }}" class="btn-nav" data-i18n="nav.new-analysis">New Analysis</a></li>
+      <li><a href="{{ url_for('upload') }}" class="btn-nav" data-i18n="nav.analyze">Analyse Crop</a></li>
     </ul>
   </nav>
 
@@ -47,19 +49,18 @@
       <button class="ptab active" data-tab="tab-weather" onclick="switchTab(this,'tab-weather')">Weather</button>
       <button class="ptab" data-tab="tab-market" onclick="switchTab(this,'tab-market')">Market</button>
       <button class="ptab" data-tab="tab-schemes" onclick="switchTab(this,'tab-schemes')">Schemes</button>
-      <button class="ptab" data-tab="tab-shops" onclick="switchTab(this,'tab-shops')">Shops</button>
     </div>
 
     <!-- ── TAB: WEATHER FORECAST ─────────────────────────────── -->
     <div class="panel-tab-content active" id="tab-weather">
       {% if forecast.available %}
         <div class="panel-section-title">
-          7-Day Forecast for <strong>{{ forecast.plant }}</strong>
+          <span data-i18n="result.forecast-title">7-Day Forecast for</span> <strong>{{ forecast.plant }}</strong>
         </div>
         <div class="forecast-strip">
           {% for day in forecast.daily %}
             <div class="forecast-day {% if loop.first %}today{% endif %}">
-              <div class="fday-name">{{ 'Today' if loop.first else day.day_name[:3] }}</div>
+              <div class="fday-name">{{ ('Today' if loop.first else day.day_name[:3]) }}</div>
               <img class="fday-icon" src="{{ day.icon }}" alt="{{ day.description }}">
               <div class="fday-temp">{{ day.temp_max }}° / {{ day.temp_min }}°</div>
               <div class="fday-humid">&#128167; {{ day.humidity }}%</div>
@@ -70,20 +71,20 @@
           {% endfor %}
         </div>
 
-        <div class="panel-section-title" style="margin-top:16px;">Crop Advisory — {{ plant_name }}</div>
+        <div class="panel-section-title" style="margin-top:16px;"><span data-i18n="result.panel-advisory">Crop Advisory —</span> {{ plant_name }}</div>
         <div class="spray-window-badge">
-          Best spray window: <strong>{{ forecast.spray_window }}</strong>
+          <span data-i18n="result.spray-window">Best spray window:</span> <strong>{{ forecast.spray_window }}</strong>
         </div>
 
         {% for advice in forecast.crop_advice %}
           <div class="advice-day-card risk-{{ advice.risk_level | lower }}">
             <div class="adc-header">
-              <span class="adc-day">{{ 'Today' if loop.first else advice.day_name[:3] }}, {{ advice.short_date }}</span>
+              <span class="adc-day">{{ ('Today' if loop.first else advice.day_name[:3]) }}, {{ advice.short_date }}</span>
               <span class="risk-mini risk-{{ advice.risk_level | lower }}">{{ advice.risk_level }}</span>
               {% if advice.spray_ok %}
-                <span class="spray-ok-badge">Spray OK &bull; {{ advice.spray_time }}</span>
+                <span class="spray-ok-badge"><span data-i18n="result.spray-ok">Spray OK</span> &bull; {{ advice.spray_time }}</span>
               {% else %}
-                <span class="spray-no-badge">No Spray</span>
+                <span class="spray-no-badge" data-i18n="result.spray-no">No Spray</span>
               {% endif %}
             </div>
             {% for tip in advice.tips %}
@@ -94,8 +95,8 @@
 
       {% else %}
         <div class="panel-empty">
-          <p>Weather forecast unavailable.</p>
-          <p>Add <code>OPENWEATHER_API_KEY</code> and fetch location on the upload page.</p>
+          <p data-i18n="result.weather-unavailable">Weather forecast unavailable.</p>
+          <p data-i18n="result.weather-add-key">Add OPENWEATHER_API_KEY and fetch location on the upload page.</p>
         </div>
       {% endif %}
     </div>
@@ -103,22 +104,22 @@
     <!-- ── TAB: MARKET PRICES ────────────────────────────────── -->
     <div class="panel-tab-content" id="tab-market">
       {% if market %}
-        <div class="panel-section-title">{{ market.commodity }} Market Prices</div>
+        <div class="panel-section-title">{{ market.commodity }} <span data-i18n="result.market-title">Market Prices</span></div>
         <div class="market-summary">
           <div class="mkt-card">
             <div class="mkt-val">&#8377;{{ market.avg_price }}</div>
-            <div class="mkt-lbl">Avg Price</div>
+            <div class="mkt-lbl" data-i18n="result.mkt-avg">Avg Price</div>
           </div>
           <div class="mkt-card">
             <div class="mkt-val {% if market.trend == 'Rising' %}trend-up{% elif market.trend == 'Falling' %}trend-down{% endif %}">
               {{ '&#8593;' if market.trend == 'Rising' else ('&#8595;' if market.trend == 'Falling' else '&#8212;') }}
               {{ market.trend }}
             </div>
-            <div class="mkt-lbl">Trend</div>
+            <div class="mkt-lbl" data-i18n="result.mkt-trend">Trend</div>
           </div>
           <div class="mkt-card">
             <div class="mkt-val">&#8377;{{ market.predicted_next_week }}</div>
-            <div class="mkt-lbl">Predicted (next wk)</div>
+            <div class="mkt-lbl" data-i18n="result.mkt-predict">Predicted (next wk)</div>
           </div>
         </div>
 
@@ -132,7 +133,7 @@
         {% endif %}
 
         {% if market.markets %}
-          <div class="panel-section-title" style="margin-top:16px;">Live Market Rates</div>
+          <div class="panel-section-title" style="margin-top:16px;" data-i18n="result.live-market">Live Market Rates</div>
           <div class="market-table">
             {% for m in market.markets %}
               <div class="mkt-row">
@@ -150,11 +151,11 @@
           </div>
         {% endif %}
 
-        <a href="{{ url_for('market_page') }}?crop={{ plant_name }}" class="btn btn-sm" style="margin-top:12px;display:block;text-align:center;">
+        <a href="{{ url_for('market_page') }}?crop={{ plant_name }}" class="btn btn-sm" style="margin-top:12px;display:block;text-align:center;" data-i18n="result.market-full">
           Full Market Analysis
         </a>
       {% else %}
-        <div class="panel-empty">Market data unavailable.</div>
+        <div class="panel-empty" data-i18n="result.market-unavailable">Market data unavailable.</div>
       {% endif %}
     </div>
 
@@ -162,7 +163,7 @@
     <div class="panel-tab-content" id="tab-schemes">
       {% if schemes %}
         <div class="panel-section-title">
-          Farmer Schemes
+          <span data-i18n="result.schemes-title">Farmer Schemes</span>
           {% if location_info and location_info.state %}
             — {{ location_info.state }}
           {% endif %}
@@ -181,40 +182,7 @@
           </div>
         {% endfor %}
       {% else %}
-        <div class="panel-empty">Govt schemes data unavailable.</div>
-      {% endif %}
-    </div>
-
-    <!-- ── TAB: NEARBY SHOPS ────────────────────────────────── -->
-    <div class="panel-tab-content" id="tab-shops">
-      {% if nearby_shops %}
-        <div class="panel-section-title">Nearby Agri Shops</div>
-        {% for shop in nearby_shops %}
-          <div class="shop-card">
-            <div class="shop-name">{{ shop.name }}</div>
-            <div class="shop-addr">{{ shop.address }}</div>
-            <div class="shop-meta">
-              {% if shop.rating %}<span class="shop-rating">&#9733; {{ shop.rating }}</span>{% endif %}
-              <span class="shop-dist">{{ shop.distance_approx }} km away</span>
-              {% if shop.open_now is not none %}
-                <span class="shop-status {{ 'open' if shop.open_now else 'closed' }}">
-                  {{ 'Open' if shop.open_now else 'Closed' }}
-                </span>
-              {% endif %}
-            </div>
-            <a href="{{ shop.maps_url }}" target="_blank" class="btn btn-sm" style="margin-top:8px;">
-              View on Maps
-            </a>
-          </div>
-        {% endfor %}
-      {% elif latitude %}
-        <div class="panel-empty">
-          <p>To find nearby shops, add a <code>GOOGLE_MAPS_API_KEY</code> to your .env file.</p>
-        </div>
-      {% else %}
-        <div class="panel-empty">
-          <p>Enable location on the upload page to find nearby agri shops.</p>
-        </div>
+        <div class="panel-empty" data-i18n="result.schemes-unavailable">Govt schemes data unavailable.</div>
       {% endif %}
     </div>
 
@@ -302,7 +270,7 @@
           </div>
         </div>
       {% else %}
-        <p style="color:var(--muted);font-size:0.9rem;">Weather data unavailable — add OPENWEATHER_API_KEY and fetch location for live scoring.</p>
+        <p style="color:var(--muted);font-size:0.9rem;" data-i18n="result.weather-missing">Weather data unavailable — add OPENWEATHER_API_KEY and fetch location for live scoring.</p>
       {% endif %}
     </div>
 
@@ -323,13 +291,13 @@
       </div>
       {% if advisory.chemicals_to_avoid %}
         <div class="advisory-section">
-          <h3>Chemicals to Avoid</h3>
+          <h3 data-i18n="result.chem-avoid">Chemicals to Avoid</h3>
           <ul>{% for c in advisory.chemicals_to_avoid %}<li>{{ c }}</li>{% endfor %}</ul>
         </div>
       {% endif %}
       {% if advisory.alternatives %}
         <div class="advisory-section">
-          <h3>Safer Alternatives</h3>
+          <h3 data-i18n="result.chem-alt">Safer Alternatives</h3>
           <ul>{% for alt in advisory.alternatives %}<li>{{ alt }}</li>{% endfor %}</ul>
         </div>
       {% endif %}
@@ -353,11 +321,11 @@
     <!-- NEARBY HELP (severe) -->
     {% if nursery_link %}
       <div class="card" style="border-left:4px solid var(--warn);">
-        <h2>Severe Case — Find Nearby Help</h2>
-        <p style="color:var(--muted);margin-bottom:16px;">Severity is high. Consider consulting an agricultural expert near you.</p>
+        <h2 data-i18n="result.severe-title">Severe Case — Find Nearby Help</h2>
+        <p style="color:var(--muted);margin-bottom:16px;" data-i18n="result.severe-text">Severity is high. Consider consulting an agricultural expert near you.</p>
         <div style="display:flex;gap:12px;flex-wrap:wrap;">
-          <a href="{{ nursery_link }}" target="_blank" class="btn btn-sm">Nearby Nursery</a>
-          <a href="{{ consultant_link }}" target="_blank" class="btn-outline btn btn-sm">Agriculture Consultant</a>
+          <a href="{{ nursery_link }}" target="_blank" class="btn btn-sm" data-i18n="result.btn-nursery">Nearby Nursery</a>
+          <a href="{{ consultant_link }}" target="_blank" class="btn-outline btn btn-sm" data-i18n="result.btn-consultant">Agriculture Consultant</a>
         </div>
       </div>
     {% endif %}
@@ -382,9 +350,9 @@
             </a>
           {% endfor %}
         </div>
-        <a href="{{ url_for('community') }}?plant={{ plant_name }}" class="btn-secondary btn-sm" style="margin-top:12px;display:inline-block;">View All Discussions</a>
+        <a href="{{ url_for('community') }}?plant={{ plant_name }}" class="btn-secondary btn-sm" style="margin-top:12px;display:inline-block;" data-i18n="result.view-discussions">View All Discussions</a>
       {% else %}
-        <p style="color:var(--muted);font-size:0.9rem;">No community discussions yet for this crop/disease. Be the first to post!</p>
+        <p style="color:var(--muted);font-size:0.9rem;" data-i18n="result.community-empty">No community discussions yet for this crop/disease. Be the first to post!</p>
       {% endif %}
     </div>
 
@@ -392,13 +360,13 @@
     <div class="card">
       <h2 data-i18n="result.chat-title">Ask AI About Your Crop</h2>
       <p style="color:var(--muted);margin-bottom:16px;font-size:0.9rem;">
-        Conversation with Gemini AI in <strong id="currentLang">{{ language }}</strong>. <span data-i18n="result.chat-desc2">Ask follow-up questions &mdash; it remembers the whole chat.</span>
+        <span data-i18n="result.chat-desc1">Conversation with Gemini AI in</span> <strong id="currentLang">{{ language }}</strong>. <span data-i18n="result.chat-desc2">Ask follow-up questions &mdash; it remembers the whole chat.</span>
       </p>
 
       <div class="chat-thread" id="chatThread"></div>
 
       <div class="chat-input-row">
-        <textarea id="chatInput" placeholder="Ask anything... e.g. How often should I spray? Any organic alternatives?"></textarea>
+        <textarea id="chatInput" placeholder="Ask anything... e.g. How often should I spray? Any organic alternatives?" data-i18n="result.chat-placeholder"></textarea>
       <button id="chatSendBtn" class="chat-send-btn" type="button" title="Send (Enter)" data-i18n="result.chat-send">Send</button>
       </div>
     </div>
