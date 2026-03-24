@@ -1,22 +1,43 @@
-# Sashyasnehi AI – MVP Setup
+# Sashyasnehi AI
 
-This project is a Flask + TensorFlow crop advisory MVP with:
-- MobileNetV2 disease classification
-- HSV severity estimation
-- Weather-based risk scoring (OpenWeather)
-- Chemical safety lookup
-- Rule-based advisory engine
-- Multilingual explanation + chat (Gemini)
+An end-to-end crop disease advisory web app I built as a personal portfolio project.
+It helps farmers detect crop disease from leaf images and gives practical, localized next steps (risk, causes, actions, and weather-aware advice).
 
-## 1) Install dependencies
+## Why I Built This
+I wanted to build one complete AI product, not just a model notebook. This project combines ML, backend APIs, UI/UX, and multilingual support in one workflow that feels useful in real farming scenarios.
+
+## Demo / Screenshot
+- Live demo: Add your deployed URL here
+- Screenshots: Add project images in a `docs/` folder and link them here
+
+Example:
+`![Result Screen](docs/result-screen.png)`
+
+## Tech Stack
+- Backend: Flask, Python
+- ML: TensorFlow, MobileNetV2 transfer learning
+- Data/Logic: OpenWeather API, rule-based advisory, chemical safety lookup
+- Frontend: HTML, CSS, JavaScript (multilingual UI + dynamic translation)
+- Optional AI Layer: Gemini API for translation/chat enhancement
+
+## How to Run
+
+1. Clone the repo
 
 ```bash
-C:/Users/91701/AppData/Local/Programs/Python/Python312/python.exe -m pip install -r requirements.txt
+git clone <your-repo-url>
+cd SashyasnehiAI
 ```
 
-## 2) Configure API keys
+2. Install dependencies
 
-Create `.env` in project root using `.env.example`:
+```bash
+python -m pip install -r requirements.txt
+```
+
+3. Configure environment
+
+Create `.env` from `.env.example` and set keys:
 
 ```env
 SECRET_KEY=change-this
@@ -27,35 +48,37 @@ MODEL_PATH=model/disease_model.keras
 CLASS_MAP_PATH=model/class_names.json
 ```
 
-## 3) Prepare public PlantVillage subset (free)
+4. (Optional) Prepare dataset and train model
 
 ```bash
-C:/Users/91701/AppData/Local/Programs/Python/Python312/python.exe prepare_dataset.py --output_dir dataset/plantvillage_subset --max_per_class 600 --zip_cache C:/pv_cache/plant_village.zip
+python prepare_dataset.py --output_dir dataset/plantvillage_subset --max_per_class 600
+python train_model.py --data_dir dataset/plantvillage_subset --epochs 8
 ```
 
-- Default exports 6 practical classes for fast training.
-- You can change classes with `--classes`.
-- This script avoids TFDS extraction and is safe for Windows path-length limits.
-
-## 4) Train the model
+5. Run the app
 
 ```bash
-C:/Users/91701/AppData/Local/Programs/Python/Python312/python.exe train_model.py --data_dir dataset/plantvillage_subset --epochs 8
-```
-
-Outputs:
-- `model/disease_model.keras`
-- `model/class_names.json`
-
-## 5) Run the Flask app
-
-```bash
-C:/Users/91701/AppData/Local/Programs/Python/Python312/python.exe app.py
+python app.py
 ```
 
 Open: `http://127.0.0.1:5000`
 
-## Notes
-- If model file is missing, app still runs with warning and fallback logic.
-- For multilingual responses and richer chat, `GEMINI_API_KEY` is required.
-- For weather enrichment, `OPENWEATHER_API_KEY` is required.
+## Dataset / Source
+- PlantVillage (public plant disease dataset)
+- Weather context from OpenWeather API
+- Market and advisory enrichment from project-side rule logic and integrated services
+
+## Key Results / Findings
+- Built a full ML-to-web pipeline: upload image -> model prediction -> severity -> risk -> actionable advisory
+- Added multilingual result handling (English, Hindi, Kannada) with runtime language switching
+- Added recent analysis snapshot + improved usability around result recall
+- Improved translation quality control to avoid mixed-language or repetitive broken outputs
+
+## Future Work
+- Add user-specific advisory memory across seasons (farm timeline)
+- Expand crop/disease coverage with more classes and regional datasets
+- Add model confidence calibration and uncertainty warnings
+- Add deployment with CI/CD + automated regression tests for translation and UI
+
+## Portfolio Note
+This is my personal project (not a hackathon build). I am actively improving it to reflect my end-to-end engineering approach: practical AI, usable product design, and continuous iteration from real feedback.
