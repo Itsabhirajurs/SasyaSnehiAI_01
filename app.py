@@ -25,7 +25,10 @@ from services.weather import get_environment_risk
 from services.weather_forecast import get_forecast
 from services.supabase_client import verify_token
 import community_db
-import supabase_db
+try:
+    import supabase_db
+except ModuleNotFoundError:
+    supabase_db = None
 
 
 app = Flask(__name__)
@@ -37,7 +40,7 @@ app.secret_key = app.config["SECRET_KEY"]
 # If SUPABASE_SERVICE_ROLE_KEY is set → use Supabase PostgreSQL (tables visible in dashboard)
 # Otherwise → fall back to local SQLite (community.db)
 _USE_SUPABASE_DB = bool(app.config.get("SUPABASE_SERVICE_ROLE_KEY"))
-if _USE_SUPABASE_DB:
+if _USE_SUPABASE_DB and supabase_db is not None:
     supabase_db.init_db(app.config["SUPABASE_URL"], app.config["SUPABASE_SERVICE_ROLE_KEY"])
     db = supabase_db   # all db.xxx() calls go to Supabase
 else:
