@@ -61,7 +61,30 @@ python train_model.py --data_dir dataset/plantvillage_subset --epochs 8
 python app.py
 ```
 
-Open: `http://127.0.0.1:5000`
+Open: `http://127.0.0.1:5001`
+
+## Deploy on Render
+
+This repo is now Render-ready with `render.yaml`.
+
+1. Push your latest code to GitHub
+2. In Render: New + -> Blueprint
+3. Select this repository
+4. Render will read `render.yaml` and create the web service automatically
+5. Add missing secret env values in Render dashboard (if not already set)
+
+Required env vars for full features:
+- `SECRET_KEY`
+- `OPENWEATHER_API_KEY`
+- `GEMINI_API_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+Notes:
+- App starts with: `gunicorn app:app --workers 1 --threads 4 --timeout 180`
+- If model files are missing, the app still boots but disease prediction features will be limited
+- Free instances can cold-start; first request may take a few seconds
 
 ## Dataset / Source
 - PlantVillage (public plant disease dataset)
