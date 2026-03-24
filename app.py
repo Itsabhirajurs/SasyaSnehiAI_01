@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import uuid
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -24,11 +25,24 @@ from services.weather import get_environment_risk
 from services.weather_forecast import get_forecast
 from services.supabase_client import verify_token
 import community_db
+import supabase_db
 
 
 app = Flask(__name__)
 app.config.from_object(Config)
 app.secret_key = app.config["SECRET_KEY"]
+
+
+# ─── Choose database backend ────────────────────────────────────────────────
+# If SUPABASE_SERVICE_ROLE_KEY is set → use Supabase PostgreSQL (tables visible in dashboard)
+# Otherwise → fall back to local SQLite (community.db)
+_USE_SUPABASE_DB = bool(app.config.get("SUPABASE_SERVICE_ROLE_KEY"))
+if _USE_SUPABASE_DB:
+    supabase_db.init_db(app.config["SUPABASE_URL"], app.config["SUPABASE_SERVICE_ROLE_KEY"])
+    db = supabase_db   # all db.xxx() calls go to Supabase
+else:
+    community_db.init_db(app.config["COMMUNITY_DB"])
+    db = community_db  # fallback to SQLite
 
 
 @app.context_processor
@@ -44,9 +58,6 @@ def nl2br_filter(value: str) -> Markup:
     return Markup(str(escape(value)).replace('\n', '<br>'))
 
 Path(app.config["UPLOAD_FOLDER"]).mkdir(parents=True, exist_ok=True)
-
-# Initialise community DB
-community_db.init_db(app.config["COMMUNITY_DB"])
 
 model_service = DiseaseModelService(app.config["MODEL_PATH"], app.config["CLASS_MAP_PATH"])
 chemical_service = ChemicalSafetyService(str(Path(__file__).parent / "data" / "chemical_db.json"))
@@ -110,6 +121,11 @@ def _extract_token() -> str:
     if tok:
         return str(tok)
     return ""
+
+
+@app.route("/login")
+def login():
+    return render_template("login.html")
 
 
 @app.route("/")
@@ -226,7 +242,7 @@ def analyze():
         "actions": str(advisory.get("actions", "")),
     }
 
-    if language != "English" and llm_available:
+    if language != "English":
         advisory["summary"] = llm_service.translate_text(str(advisory["summary"]), language)
         advisory["causes"] = llm_service.translate_text(str(advisory["causes"]), language)
         advisory["actions"] = llm_service.translate_text(str(advisory["actions"]), language)
@@ -264,7 +280,7 @@ def analyze():
                                app.config.get("ALPHA_VANTAGE_KEY", ""))
 
     # ── NEW: Similar community posts ────────────────────────────────────────
-    similar_posts = community_db.get_similar_posts(plant_name, disease_name, limit=4)
+    similar_posts = db.get_similar_posts(plant_name, disease_name, limit=4)
 
     return render_template(
         "result.html",
@@ -323,12 +339,12 @@ def community():
     page = max(1, int(request.args.get("page", 1)))
     per_page = 20
 
-    posts = community_db.get_posts(
+    posts = db.get_posts(
         plant=plant_filter, disease=disease_filter,
         state=state_filter, search=search,
         limit=per_page, offset=(page - 1) * per_page
     )
-    stats = community_db.get_stats()
+    stats = db.get_stats()
 
     return render_template("community.html",
                            posts=posts, stats=stats,
@@ -357,9 +373,9 @@ def community_new():
         tags = request.form.get("tags", "").strip()
 
         # Ensure profile exists and use profile name for author display
-        profile = community_db.get_profile(user["id"]) or {}
+        profile = db.get_profile(user["id"]) or {}
         if not profile:
-            profile = community_db.upsert_profile(
+            profile = db.upsert_profile(
                 user["id"],
                 email=user.get("email", ""),
                 full_name=author,
@@ -372,7 +388,7 @@ def community_new():
             return render_template("community_new.html",
                                    error="Title and description are required.")
 
-        post_id = community_db.create_post(title=title, body=body, plant=plant,
+        post_id = db.create_post(title=title, body=body, plant=plant,
                                            disease=disease, location=location,
                                            state=state, author=display_name, tags=tags,
                                            supabase_user_id=user.get("id", ""))
@@ -388,11 +404,11 @@ def community_new():
 
 @app.route("/community/post/<int:post_id>")
 def community_post(post_id: int):
-    post = community_db.get_post(post_id)
+    post = db.get_post(post_id)
     if post is None:
         return redirect(url_for("community"))
-    replies = community_db.get_replies(post_id)
-    similar = community_db.get_similar_posts(
+    replies = db.get_replies(post_id)
+    similar = db.get_similar_posts(
         post.get("plant", ""), post.get("disease", ""), limit=4)
     return render_template("community_post.html", post=post,
                            replies=replies, similar=similar)
@@ -411,11 +427,11 @@ def community_reply():
     if not user or not user.get("id"):
         return jsonify({"error": "Auth required"}), 401
 
-    profile = community_db.get_profile(user["id"]) or {}
+    profile = db.get_profile(user["id"]) or {}
     author = profile.get("full_name") or profile.get("email") or "Anonymous"
 
-    reply_id = community_db.add_reply(post_id, body, author, supabase_user_id=user.get("id", ""))
-    replies = community_db.get_replies(post_id)
+    reply_id = db.add_reply(post_id, body, author, supabase_user_id=user.get("id", ""))
+    replies = db.get_replies(post_id)
     reply = next((r for r in replies if r["id"] == reply_id), None)
     return jsonify({"success": True, "reply": reply})
 
@@ -430,7 +446,7 @@ def community_vote_post():
         return jsonify({"error": "post_id required"}), 400
     if not user or not user.get("id"):
         return jsonify({"error": "Auth required"}), 401
-    result = community_db.vote_post(post_id, user.get("id", ""))
+    result = db.vote_post(post_id, user.get("id", ""))
     result["success"] = True
     return jsonify(result)
 
@@ -445,7 +461,7 @@ def community_vote_reply():
         return jsonify({"error": "reply_id required"}), 400
     if not user or not user.get("id"):
         return jsonify({"error": "Auth required"}), 401
-    result = community_db.vote_reply(reply_id, user.get("id", ""))
+    result = db.vote_reply(reply_id, user.get("id", ""))
     result["success"] = True
     return jsonify(result)
 
@@ -460,7 +476,7 @@ def community_solve():
     if not user or not user.get("id"):
         return jsonify({"error": "Auth required"}), 401
     if reply_id and post_id:
-        community_db.mark_solution(reply_id, post_id)
+        db.mark_solution(reply_id, post_id)
     return jsonify({"success": True})
 
 
@@ -475,9 +491,9 @@ def api_profile_me():
     user = verify_token(token, app.config.get("SUPABASE_URL", ""), app.config.get("SUPABASE_ANON_KEY", ""))
     if not user or not user.get("id"):
         return jsonify({"error": "Auth required"}), 401
-    profile = community_db.get_profile(user["id"])
+    profile = db.get_profile(user["id"])
     if not profile:
-        profile = community_db.upsert_profile(
+        profile = db.upsert_profile(
             user["id"],
             email=user.get("email", ""),
             full_name=(user.get("metadata") or {}).get("full_name", ""),
@@ -501,7 +517,7 @@ def api_profile_update():
     if not user or not user.get("id"):
         return jsonify({"error": "Auth required"}), 401
     payload = request.get_json(silent=True) or {}
-    profile = community_db.upsert_profile(
+    profile = db.upsert_profile(
         user["id"],
         email=user.get("email", ""),
         full_name=str(payload.get("full_name", "")).strip(),
@@ -511,8 +527,125 @@ def api_profile_update():
         major_crop=str(payload.get("major_crop", "")).strip(),
         phone=str(payload.get("phone", "")).strip(),
         language=str(payload.get("language", "")).strip(),
+        farm_size_acres=float(payload.get("farm_size_acres", 0) or 0),
+        farm_type=str(payload.get("farm_type", "")).strip(),
+        soil_type=str(payload.get("soil_type", "")).strip(),
+        irrigation_type=str(payload.get("irrigation_type", "")).strip(),
+        experience_years=int(payload.get("experience_years", 0) or 0),
     )
     return jsonify({"success": True, "profile": profile})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PROFILE PAGE
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.route("/profile")
+def profile_page():
+    return render_template("profile.html")
+
+
+@app.route("/api/profile/full", methods=["GET"])
+def api_profile_full():
+    """Return profile + farming seasons + disease history + stats."""
+    token = _extract_token()
+    user = verify_token(token, app.config.get("SUPABASE_URL", ""), app.config.get("SUPABASE_ANON_KEY", ""))
+    if not user or not user.get("id"):
+        return jsonify({"error": "Auth required"}), 401
+    uid = user["id"]
+    profile = db.get_profile(uid)
+    if not profile:
+        profile = db.upsert_profile(uid, email=user.get("email", ""),
+            full_name=(user.get("metadata") or {}).get("full_name", ""))
+    seasons = db.get_farming_seasons(uid)
+    diseases = db.get_disease_history(uid)
+    stats = db.get_farmer_stats(uid)
+    return jsonify({
+        "profile": profile,
+        "seasons": seasons,
+        "diseases": diseases,
+        "stats": stats,
+    })
+
+
+# ─── Farming Seasons API ────────────────────────────────────────────────────
+
+@app.route("/api/seasons", methods=["POST"])
+def api_add_season():
+    token = _extract_token()
+    user = verify_token(token, app.config.get("SUPABASE_URL", ""), app.config.get("SUPABASE_ANON_KEY", ""))
+    if not user or not user.get("id"):
+        return jsonify({"error": "Auth required"}), 401
+    p = request.get_json(silent=True) or {}
+    sid = db.add_farming_season(
+        user["id"],
+        season=str(p.get("season", "")).strip(),
+        year=int(p.get("year", 0) or 0),
+        crop_name=str(p.get("crop_name", "")).strip(),
+        area_acres=float(p.get("area_acres", 0) or 0),
+        expected_yield_kg=float(p.get("expected_yield_kg", 0) or 0),
+        actual_yield_kg=float(p.get("actual_yield_kg", 0) or 0),
+        revenue=float(p.get("revenue", 0) or 0),
+        expenses=float(p.get("expenses", 0) or 0),
+        status=str(p.get("status", "planning")).strip(),
+        sowing_date=str(p.get("sowing_date", "")).strip(),
+        harvest_date=str(p.get("harvest_date", "")).strip(),
+        notes=str(p.get("notes", "")).strip(),
+    )
+    return jsonify({"success": True, "id": sid})
+
+
+@app.route("/api/seasons/<int:season_id>", methods=["PUT"])
+def api_update_season(season_id):
+    token = _extract_token()
+    user = verify_token(token, app.config.get("SUPABASE_URL", ""), app.config.get("SUPABASE_ANON_KEY", ""))
+    if not user or not user.get("id"):
+        return jsonify({"error": "Auth required"}), 401
+    p = request.get_json(silent=True) or {}
+    db.update_farming_season(season_id, user["id"], **p)
+    return jsonify({"success": True})
+
+
+@app.route("/api/seasons/<int:season_id>", methods=["DELETE"])
+def api_delete_season(season_id):
+    token = _extract_token()
+    user = verify_token(token, app.config.get("SUPABASE_URL", ""), app.config.get("SUPABASE_ANON_KEY", ""))
+    if not user or not user.get("id"):
+        return jsonify({"error": "Auth required"}), 401
+    db.delete_farming_season(season_id, user["id"])
+    return jsonify({"success": True})
+
+
+# ─── Disease History API ────────────────────────────────────────────────────
+
+@app.route("/api/diseases", methods=["POST"])
+def api_add_disease():
+    token = _extract_token()
+    user = verify_token(token, app.config.get("SUPABASE_URL", ""), app.config.get("SUPABASE_ANON_KEY", ""))
+    if not user or not user.get("id"):
+        return jsonify({"error": "Auth required"}), 401
+    p = request.get_json(silent=True) or {}
+    did = db.add_disease_record(
+        user["id"],
+        crop_name=str(p.get("crop_name", "")).strip(),
+        disease_name=str(p.get("disease_name", "")).strip(),
+        severity=str(p.get("severity", "")).strip(),
+        treatment=str(p.get("treatment", "")).strip(),
+        outcome=str(p.get("outcome", "")).strip(),
+        detected_date=str(p.get("detected_date", "")).strip(),
+        notes=str(p.get("notes", "")).strip(),
+    )
+    return jsonify({"success": True, "id": did})
+
+
+@app.route("/api/diseases/<int:record_id>", methods=["DELETE"])
+def api_delete_disease(record_id):
+    token = _extract_token()
+    user = verify_token(token, app.config.get("SUPABASE_URL", ""), app.config.get("SUPABASE_ANON_KEY", ""))
+    if not user or not user.get("id"):
+        return jsonify({"error": "Auth required"}), 401
+    db.delete_disease_record(record_id, user["id"])
+    return jsonify({"success": True})
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -589,9 +722,6 @@ def api_retranslate():
     if target_lang == "English":
         return jsonify(orig)
 
-    if not llm_service.is_available():
-        return jsonify(orig)
-
     translated = {
         "summary": llm_service.translate_text(str(orig.get("summary", "")), target_lang),
         "causes": llm_service.translate_text(str(orig.get("causes", "")), target_lang),
@@ -665,4 +795,5 @@ def api_news():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.getenv("PORT", "5001"))
+    app.run(debug=True, host="0.0.0.0", port=port)

@@ -6,6 +6,11 @@
   <title>Analyze Crop — Sashyasnehi AI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  <script>
+    window.SUPABASE_URL = "{{ SUPABASE_URL }}";
+    window.SUPABASE_ANON_KEY = "{{ SUPABASE_ANON_KEY }}";
+  </script>
+  <script type="module" src="{{ url_for('static', filename='auth.js') }}"></script>
 </head>
 <body>
 
@@ -29,6 +34,7 @@
         </select>
       </li>
       <li><a href="{{ url_for('upload') }}" class="btn-nav active" data-i18n="nav.analyze">Analyze Crop</a></li>
+      <li id="navUserControls" style="display:none;align-items:center;gap:6px;"></li>
     </ul>
   </nav>
 

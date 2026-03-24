@@ -7,6 +7,11 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  <script>
+    window.SUPABASE_URL = "{{ SUPABASE_URL }}";
+    window.SUPABASE_ANON_KEY = "{{ SUPABASE_ANON_KEY }}";
+  </script>
+  <script type="module" src="{{ url_for('static', filename='auth.js') }}"></script>
 </head>
 <body>
 
@@ -31,6 +36,7 @@
       </li>
       <li><button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle dark mode">&#127769;</button></li>
       <li><a href="{{ url_for('upload') }}" class="btn-nav" data-i18n="nav.analyze">Analyse Crop</a></li>
+      <li id="navUserControls" style="display:none;align-items:center;gap:6px;"></li>
     </ul>
   </nav>
 

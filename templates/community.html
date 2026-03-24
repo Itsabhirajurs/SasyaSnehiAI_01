@@ -30,6 +30,7 @@
       </select>
     </li>
     <li><a href="{{ url_for('upload') }}" class="btn-nav" data-i18n="nav.analyze">Analyse Crop</a></li>
+    <li id="navUserControls" style="display:none;align-items:center;gap:6px;"></li>
   </ul>
 </nav>
 
@@ -39,49 +40,7 @@
       <h2 style="font-size:1.6rem;font-weight:800;color:var(--accent-dark);margin-bottom:4px;" data-i18n="community.title">Farmer Community</h2>
       <p style="color:var(--muted);font-size:0.9rem;" data-i18n="community.sub">Discuss crop diseases, share experiences, and help each other.</p>
     </div>
-    <a href="{{ url_for('community_new') }}" class="btn" id="askBtn" data-i18n="community.ask" onclick="return guardAsk();">+ Ask a Question</a>
-  </div>
-
-  <div class="card" id="authCard" style="margin-bottom:12px;">
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between;">
-      <div id="authStatus" style="font-weight:600;">Checking sign-in...</div>
-      <div id="authSignedOut" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <input id="authEmail" type="email" placeholder="Email" style="min-width:200px;">
-        <input id="authPassword" type="password" placeholder="Password (min 6)" style="min-width:160px;">
-        <button class="btn btn-sm" onclick="authSignup()">Sign up</button>
-        <button class="btn btn-outline btn-sm" onclick="authLogin()">Sign in</button>
-      </div>
-      <div id="authSignedIn" style="display:none;gap:8px;align-items:center;flex-wrap:wrap;">
-        <span id="authUserEmail" style="color:var(--muted);"></span>
-        <button class="btn btn-sm" onclick="openProfileEditor()">Profile</button>
-        <button class="btn btn-outline btn-sm" onclick="authLogout()">Sign out</button>
-      </div>
-    </div>
-    <div id="profileEditor" style="display:none;margin-top:10px;">
-      <div class="form-row">
-        <div class="form-group">
-          <label>Full name</label>
-          <input id="profName" type="text" placeholder="Farmer name">
-        </div>
-        <div class="form-group">
-          <label>Major crop focus</label>
-          <input id="profCrop" type="text" placeholder="e.g., Tomato">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>State</label><input id="profState" type="text" placeholder="State"></div>
-        <div class="form-group"><label>District</label><input id="profDistrict" type="text" placeholder="District"></div>
-        <div class="form-group"><label>Taluk</label><input id="profTaluk" type="text" placeholder="Taluk"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Phone (optional)</label><input id="profPhone" type="text" placeholder="Phone"></div>
-        <div class="form-group"><label>Preferred language</label><input id="profLang" type="text" placeholder="English/Hindi/Kannada"></div>
-      </div>
-      <div class="form-actions" style="justify-content:flex-start;">
-        <button class="btn btn-sm" onclick="saveProfile()">Save profile</button>
-        <span id="profileSaveStatus" style="color:var(--muted);"></span>
-      </div>
-    </div>
+    <a href="{{ url_for('community_new') }}" class="btn" id="askBtn" data-i18n="community.ask">+ Ask a Question</a>
   </div>
 
   <!-- Stats -->
